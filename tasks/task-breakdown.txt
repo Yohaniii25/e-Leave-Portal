@@ -1,0 +1,106 @@
+Sure! Here's a breakdown of the seven-day process for the Leave Management System (LMS), along with a suggested timeline that balances this project with your other work.
+
+### **Day 1: Setup & Initial Design**
+- **Morning**:
+  - **Setup** the Leave Management System project structure (folders, database, etc.).
+  - **Create database tables** (Users, Leave Requests, Approvals, etc.).
+  - Set up basic configurations and include necessary files (dbconfig, functions).
+  
+- **Afternoon**:
+  - **Design the login page** (use Tailwind CSS for responsiveness).
+  - **Develop basic login system** using the `LoginController` class.
+  - **Test login flow** using hardcoded admin credentials for now.
+
+---
+
+### **Day 2: User Management & Dashboard (Admin Panel)**
+
+- **Morning**:
+  - **Create Admin Dashboard** (`admin-dashboard.php`).
+  - Design layout with the Tailwind CSS framework.
+  - Add navigation links (Home, Users, Leave Requests, Logout).
+  
+- **Afternoon**:
+  - **Build functionality** to manage users (View, Add, Edit, Delete users).
+  - Implement **view and approve leave requests** for the Admin.
+  - **Create user session** and ensure it properly redirects to the correct dashboard after login.
+
+---
+
+### **Day 3: User Panel & Leave Request Functionality (Employee)**
+
+- **Morning**:
+  - **Create Employee Dashboard** (`user-dashboard.php`).
+  - Allow users to view their leave balance and request leave.
+  
+- **Afternoon**:
+  - Implement **Leave Request form** (`leave_request.php`) on the employee dashboard.
+  - Add form fields to request leave (e.g., dates, reason, leave type).
+  - Create a **confirmation page** showing the leave request after submission.
+
+---
+
+### **Day 4: Leave Request Approval Process**
+
+- **Morning**:
+  - **Add status tracking** to the leave request table (e.g., pending, approved, rejected).
+  - Implement the **approval system** where Admin can approve/reject leave requests.
+  
+- **Afternoon**:
+  - Test the leave approval flow:
+    - **Test leave request submission by employees**.
+    - **Test Admin's approval/rejection process**.
+  - Set up **email notifications** for both the employee and admin on leave status change.
+
+---
+
+### **Day 5: Testing & Debugging**
+
+- **Morning**:
+  - **Test all functionalities** (login, dashboards, leave request flow, admin actions).
+  - Fix any issues you encounter during testing (database queries, form submissions, etc.).
+  
+- **Afternoon**:
+  - Conduct **user testing** (if possible) for both the Admin and Employee flows.
+  - Refactor code for optimization and remove any unnecessary files or scripts.
+
+---
+
+### **Day 6: Final Touches & Documentation**
+
+- **Morning**:
+  - **Add extra features**, such as:
+    - Role-based content access (e.g., admin can see all requests, while employees can only see their own).
+    - Display of leave balance and history for employees.
+  
+- **Afternoon**:
+  - **Create documentation** for the Leave Management System:
+    - Brief description of how the system works.
+    - Setup guide for the database, including tables and relationships.
+    - Instructions for the Admin and Employees to use the system.
+  
+---
+
+### **Day 7: Deployment & Final Testing**
+
+- **Morning**:
+  - **Deploy the system to localhost or staging server** for final testing.
+  - Test the **user login and leave request process** again in a production-like environment.
+
+- **Afternoon**:
+  - **Deploy on live server** (if possible) or **prepare for the next steps** (e.g., integration with SMS system or additional features).
+  - **Perform final checks** (cross-browser testing, mobile responsiveness, and security).
+
+---
+
+### **Time Management Tips**:
+- Prioritize tasks that are crucial for the core functionality (e.g., login, leave request, approval) first.
+- Set aside **1-2 hours a day** to focus on this project, leaving some room for your other work.
+- If possible, break tasks into smaller, manageable chunks so you can continue working on other responsibilities.
+
+### **Progress Checkpoints**:
+- **End of Day 2**: Admin dashboard and user management are set up.
+- **End of Day 4**: Leave request system fully functional with admin approval.
+- **End of Day 6**: Documentation complete and system ready for final testing.
+
+This breakdown will allow you to build the system step by step, while also leaving room for your other tasks.
