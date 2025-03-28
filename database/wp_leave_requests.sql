@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 27, 2025 at 08:40 AM
+-- Generation Time: Mar 28, 2025 at 06:57 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -84,6 +84,7 @@ CREATE TABLE `wp_pradeshiya_sabha_users` (
   `phone_number` varchar(20) DEFAULT NULL,
   `designation` varchar(255) NOT NULL,
   `department` varchar(255) NOT NULL,
+  `sub_office` varchar(255) NOT NULL,
   `date_of_joining` date NOT NULL,
   `user_role` enum('Employee','HOD','Admin') NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -94,9 +95,10 @@ CREATE TABLE `wp_pradeshiya_sabha_users` (
 -- Dumping data for table `wp_pradeshiya_sabha_users`
 --
 
-INSERT INTO `wp_pradeshiya_sabha_users` (`ID`, `username`, `password`, `first_name`, `last_name`, `email`, `phone_number`, `designation`, `department`, `date_of_joining`, `user_role`, `created_at`, `updated_at`) VALUES
-(1, 'admin', '$2y$10$47N1Ff4iRYE0rYwCGAzWTebFxl5QzbYpG24NGCNp7BFjt/MRICIY.', 'Admin', 'User', 'yohanii725@gmail.com', '0778439871', 'Administrator', 'Administration', '2023-01-01', 'Admin', '2025-03-27 07:03:14', '2025-03-27 07:03:14'),
-(2, 'admin', '$2y$10$mzUCnO3E5Hsq4W9qdHqWWOnf2AfKhHGwHrcb2XCnUfH7k8VfiRF8O', 'Admin', 'User', 'yohanii725@gmail.com', '0778439871', 'Administrator', 'Administration', '2023-01-01', 'Admin', '2025-03-27 07:03:14', '2025-03-27 07:03:14');
+INSERT INTO `wp_pradeshiya_sabha_users` (`ID`, `username`, `password`, `first_name`, `last_name`, `email`, `phone_number`, `designation`, `department`, `sub_office`, `date_of_joining`, `user_role`, `created_at`, `updated_at`) VALUES
+(3, 'admin', '$2y$10$BsBiRu.Qo6pMS/hJQVFcXOZcyXcj7NR8JoTFIz90rWr30ifCXO5TK', 'Admin', 'User', 'yohanii725@gmail.com', '0778439871', 'Administrator', 'Administration', 'Head Office', '2023-01-01', 'Admin', '2025-03-27 08:28:36', '2025-03-27 08:28:36'),
+(5, 'admin', '$2y$10$xadovtwGX9KMtbTD5hipReR1pvFeXDkB5zLS6/V/0MqNNAicM0f.u', 'Admin', 'User', 'yohanii725@gmail.com', '0778439871', 'Administrator', 'Administration', 'Head Office', '2023-01-01', 'Admin', '2025-03-27 08:36:30', '2025-03-27 08:36:30'),
+(6, 'admin', '$2y$10$xPERKcwxTMx6xeFVOL6H3.1b48cTwJvjyJG2JfGe1PRGkhGLDYWQi', 'Admin', 'User', 'yohanii725@gmail.com', '0778439871', 'Administrator', 'Administration', 'Head Office', '2023-01-01', 'Admin', '2025-03-27 08:36:30', '2025-03-27 08:36:30');
 
 --
 -- Indexes for dumped tables
@@ -156,7 +158,7 @@ ALTER TABLE `wp_leave_request`
 -- AUTO_INCREMENT for table `wp_pradeshiya_sabha_users`
 --
 ALTER TABLE `wp_pradeshiya_sabha_users`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables
