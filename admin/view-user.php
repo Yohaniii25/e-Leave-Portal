@@ -1,0 +1,137 @@
+<?php
+session_start();
+require '../includes/dbconfig.php';
+require '../includes/admin-navbar.php';
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
+    header("Location: ../login.php");
+    exit();
+}
+$admin_office = $_SESSION['user']['sub_office'];
+// check if ID is provided
+if (!isset($_GET['id']) || empty($_GET['id'])) {
+    die("Invalid user ID.");
+}
+$user_id = intval($_GET['id']);
+// fetch user details
+$sql = "SELECT * FROM wp_pradeshiya_sabha_users WHERE ID = ? AND sub_office = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("is", $user_id, $admin_office);
+$stmt->execute();
+$result = $stmt->get_result();
+if ($result->num_rows === 0) {
+    die("User not found or you do not have permission to view this user.");
+}
+$user = $result->fetch_assoc();
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .user-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .user-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .detail-item {
+            opacity: 0;
+            animation: fadeInSlide 0.6s forwards;
+        }
+        @keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="user-card bg-white rounded-xl shadow-lg overflow-hidden max-w-md mx-auto">
+            <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-center">
+                <div class="w-24 h-24 rounded-full bg-white mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-user text-5xl text-gray-600"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white">
+                    <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?>
+                </h1>
+                <p class="text-white opacity-80"><?php echo htmlspecialchars($user['designation']); ?></p>
+            </div>
+
+
+            
+            <div class="p-6 space-y-4">
+                <!-- full name :- first name + last name -->
+                 <div class="detail-item">
+                 <div class="flex items-center">
+                        <i class="fas fa-user text-blue-500 mr-3"></i>
+                        <p class="text-gray-700">
+                            <strong>Full name:</strong> <?php echo htmlspecialchars($user['email']); ?>
+                        </p>
+                    </div>
+                 </div>
+                <div class="detail-item" style="animation-delay: 0.1s">
+                    <div class="flex items-center">
+                        <i class="fas fa-envelope text-blue-500 mr-3"></i>
+                        <p class="text-gray-700">
+                            <strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="detail-item" style="animation-delay: 0.2s">
+                    <div class="flex items-center">
+                        <i class="fas fa-phone text-green-500 mr-3"></i>
+                        <p class="text-gray-700">
+                            <strong>Phone:</strong> <?php echo htmlspecialchars($user['phone_number']); ?>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="detail-item" style="animation-delay: 0.3s">
+                    <div class="flex items-center">
+                        <i class="fas fa-building text-purple-500 mr-3"></i>
+                        <p class="text-gray-700">
+                            <strong>Department:</strong> <?php echo htmlspecialchars($user['department']); ?>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="detail-item" style="animation-delay: 0.4s">
+                    <div class="flex items-center">
+                        <i class="fas fa-office-building text-indigo-500 mr-3"></i>
+                        <p class="text-gray-700">
+                            <strong>Sub Office:</strong> <?php echo htmlspecialchars($user['sub_office']); ?>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="detail-item" style="animation-delay: 0.5s">
+                    <div class="flex items-center">
+                        <i class="fas fa-calendar-alt text-orange-500 mr-3"></i>
+                        <p class="text-gray-700">
+                            <strong>Date of Joining:</strong> <?php echo htmlspecialchars($user['date_of_joining']); ?>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-100 p-4 text-center">
+                <a href="manage-users.php" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Users
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

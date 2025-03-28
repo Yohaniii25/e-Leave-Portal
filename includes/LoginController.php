@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "dbconfig.php";
+require "dbconfig.php";
 
 class LoginController {
     private $conn;
