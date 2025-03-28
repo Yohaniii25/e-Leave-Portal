@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 28, 2025 at 06:57 AM
+-- Generation Time: Mar 28, 2025 at 07:57 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -65,7 +65,8 @@ CREATE TABLE `wp_leave_request` (
   `substitute` varchar(255) DEFAULT NULL,
   `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `sub_office` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -98,7 +99,11 @@ CREATE TABLE `wp_pradeshiya_sabha_users` (
 INSERT INTO `wp_pradeshiya_sabha_users` (`ID`, `username`, `password`, `first_name`, `last_name`, `email`, `phone_number`, `designation`, `department`, `sub_office`, `date_of_joining`, `user_role`, `created_at`, `updated_at`) VALUES
 (3, 'admin', '$2y$10$BsBiRu.Qo6pMS/hJQVFcXOZcyXcj7NR8JoTFIz90rWr30ifCXO5TK', 'Admin', 'User', 'yohanii725@gmail.com', '0778439871', 'Administrator', 'Administration', 'Head Office', '2023-01-01', 'Admin', '2025-03-27 08:28:36', '2025-03-27 08:28:36'),
 (5, 'admin', '$2y$10$xadovtwGX9KMtbTD5hipReR1pvFeXDkB5zLS6/V/0MqNNAicM0f.u', 'Admin', 'User', 'yohanii725@gmail.com', '0778439871', 'Administrator', 'Administration', 'Head Office', '2023-01-01', 'Admin', '2025-03-27 08:36:30', '2025-03-27 08:36:30'),
-(6, 'admin', '$2y$10$xPERKcwxTMx6xeFVOL6H3.1b48cTwJvjyJG2JfGe1PRGkhGLDYWQi', 'Admin', 'User', 'yohanii725@gmail.com', '0778439871', 'Administrator', 'Administration', 'Head Office', '2023-01-01', 'Admin', '2025-03-27 08:36:30', '2025-03-27 08:36:30');
+(6, 'admin', '$2y$10$xPERKcwxTMx6xeFVOL6H3.1b48cTwJvjyJG2JfGe1PRGkhGLDYWQi', 'Admin', 'User', 'yohanii725@gmail.com', '0778439871', 'Administrator', 'Administration', 'Head Office', '2023-01-01', 'Admin', '2025-03-27 08:36:30', '2025-03-27 08:36:30'),
+(7, 'sub-office-admin', '$2y$10$nfNBW6kvCn3roxM.3rx7Q.P1w10QrZmL0fGm5v01o79Ie36Y3nS4C', 'Sub Office', 'Admin', 'suboffice@pannalaps.com', '0711111111', 'Sub-Office Admin', 'Management', 'Sub Office', '2023-01-01', 'Admin', '2025-03-28 06:07:20', '2025-03-28 06:33:45'),
+(8, 'makandura', '$2y$10$lKnb5/0sKwmf6NG.SGuN7OT1mk7NQO9VY.PFsgvLkCEUY6bhnwV0K', 'Makandura', 'User', 'makandura@pannalaps.com', '0722222222', 'Officer', 'Operations', 'Makandura Sub-Office', '2022-06-15', 'Admin', '2025-03-28 06:07:20', '2025-03-28 06:33:18'),
+(9, 'yakkwila', '$2y$10$zjm8ikYevIZqKr/RR00cxOKgNWVaPR.MRJ.W/jJUk.advhVIicdXm', 'Yakkwila', 'User', 'yakkwila@pannalaps.com', '0733333333', 'Supervisor', 'IT', 'Yakkwila Sub-Office', '2021-03-10', 'Admin', '2025-03-28 06:07:20', '2025-03-28 06:33:25'),
+(10, 'hamangalla', '$2y$10$QgZ6K03jSU17zvPQLJX1oOppdiYy50rOFJHkuXM2JfHFj.nr4emMW', 'Hamangalla', 'User', 'hamangalla@pannalaps.com', '0744444444', 'Manager', 'Finance', 'Hamangalla Sub-Office', '2020-11-20', 'Admin', '2025-03-28 06:07:20', '2025-03-28 06:33:29');
 
 --
 -- Indexes for dumped tables
@@ -124,7 +129,7 @@ ALTER TABLE `wp_leave_notifications`
 --
 ALTER TABLE `wp_leave_request`
   ADD PRIMARY KEY (`request_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `fk_user_id` (`user_id`);
 
 --
 -- Indexes for table `wp_pradeshiya_sabha_users`
@@ -158,7 +163,7 @@ ALTER TABLE `wp_leave_request`
 -- AUTO_INCREMENT for table `wp_pradeshiya_sabha_users`
 --
 ALTER TABLE `wp_pradeshiya_sabha_users`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Constraints for dumped tables
@@ -181,6 +186,7 @@ ALTER TABLE `wp_leave_notifications`
 -- Constraints for table `wp_leave_request`
 --
 ALTER TABLE `wp_leave_request`
+  ADD CONSTRAINT `fk_user_id` FOREIGN KEY (`user_id`) REFERENCES `wp_pradeshiya_sabha_users` (`ID`),
   ADD CONSTRAINT `wp_leave_request_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `wp_pradeshiya_sabha_users` (`ID`);
 COMMIT;
 
