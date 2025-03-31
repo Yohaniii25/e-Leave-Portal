@@ -40,7 +40,7 @@ class LoginController {
                 if ($user['user_role'] === 'Admin') {
                     header("Location: ./admin/admin-dashboard.php");
                 } else {
-                    header("Location: ./employee/user-dashboard.php");
+                    header("Location: ./user/user-dashboard.php");
                 }
                 exit();
             } else {
