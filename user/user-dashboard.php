@@ -2,6 +2,7 @@
 session_start();
 
 require '../includes/dbconfig.php';
+require '../includes/user-navbar.php';
 
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Employee') {
