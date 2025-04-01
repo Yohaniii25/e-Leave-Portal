@@ -11,7 +11,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Employee') {
 }
 
 $user_id = $_SESSION['user']['id'];
+$sub_office = $_SESSION['user']['sub_office'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
+$department = $_SESSION['user']['department'] ?? '';
+
 $leave_balance = 0;
 
 $sql = "SELECT leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?";
@@ -53,7 +56,7 @@ if ($stmt) {
 
     <div class="container mx-auto mt-8">
         <div class="bg-white p-6 rounded-lg shadow-lg">
-            <h1 class="text-3xl font-bold text-gray-800">Employee Dashboard</h1>
+            <h1 class="text-3xl font-bold text-gray-800">User Dashboard</h1>
             <p class="text-lg text-gray-600 mt-4">Welcome, <?php echo htmlspecialchars($full_name); ?>!</p>
         </div>
 
