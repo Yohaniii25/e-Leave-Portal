@@ -24,31 +24,6 @@ $leaveBalanceQuery->execute();
 $leaveBalanceResult = $leaveBalanceQuery->get_result();
 $leaveBalanceRow = $leaveBalanceResult->fetch_assoc();
 $leave_balance = $leaveBalanceRow['leave_balance'];
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $leave_type = $_POST['leave_type'];
-    $leave_start_date = $_POST['leave_start_date'];
-    $leave_end_date = $_POST['leave_end_date'];
-    $reason = $_POST['reason'];
-    $substitute = $_POST['substitute'];
-
-    // Calculate number of leave days
-    $start = new DateTime($leave_start_date);
-    $end = new DateTime($leave_end_date);
-    $interval = $start->diff($end);
-    $number_of_days = $interval->days + 1; // Include start date
-
-    // Check if user has enough leave balance
-    if ($number_of_days > $leave_balance) {
-        $error_message = "You don't have enough leave balance.";
-    } else {
-        // Insert Leave Request
-        $stmt = $conn->prepare("INSERT INTO wp_leave_request (user_id, leave_type, leave_start_date, leave_end_date, number_of_days, reason, substitute, sub_office) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("isssisss", $user_id, $leave_type, $leave_start_date, $leave_end_date, $number_of_days, $reason, $substitute, $sub_office);
-
-   
-    }
-}
 ?>
 
 
@@ -69,10 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <p class="text-gray-700">Available Leave Balance: <strong><?php echo $leave_balance; ?> days</strong></p>
 
-            <?php if (isset($success_message)): ?>
-                <p class="text-green-600 mt-4"><?php echo $success_message; ?></p>
-            <?php elseif (isset($error_message)): ?>
-                <p class="text-red-600 mt-4"><?php echo $error_message; ?></p>
+            <?php if (isset($_SESSION['success_message'])): ?>
+                <p class="text-green-600 mt-4"><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
+            <?php elseif (isset($_SESSION['error_message'])): ?>
+                <p class="text-red-600 mt-4"><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></p>
             <?php endif; ?>
 
             <form method="POST" action="process-leave.php" class="mt-6">
