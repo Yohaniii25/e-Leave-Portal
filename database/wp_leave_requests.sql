@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 03, 2025 at 01:31 PM
+-- Generation Time: Apr 16, 2025 at 08:12 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -75,7 +75,8 @@ CREATE TABLE `wp_leave_request` (
 
 INSERT INTO `wp_leave_request` (`request_id`, `user_id`, `leave_type`, `leave_start_date`, `leave_end_date`, `number_of_days`, `reason`, `substitute`, `status`, `created_at`, `updated_at`, `sub_office`) VALUES
 (20, 14, 'Sick Leave', '2025-04-03', '2025-04-05', 3, 'ddsdsd', 'Lakmi Perera', 'Pending', '2025-04-03 09:56:21', '2025-04-03 09:56:21', 'Head Office'),
-(21, 14, 'Sick Leave', '2025-04-03', '2025-04-05', 3, 'fever', 'Lakmi Perera', 'Pending', '2025-04-03 10:00:28', '2025-04-03 10:00:28', 'Head Office');
+(21, 14, 'Sick Leave', '2025-04-03', '2025-04-05', 3, 'fever', 'Lakmi Perera', 'Pending', '2025-04-03 10:00:28', '2025-04-03 10:00:28', 'Head Office'),
+(23, 14, 'Annual Leave', '2025-04-03', '2025-04-04', 2, 'chiki chiki bum bum', 'Lakmi Perera', 'Pending', '2025-04-03 12:48:32', '2025-04-03 12:48:32', 'Head Office');
 
 -- --------------------------------------------------------
 
@@ -120,7 +121,7 @@ INSERT INTO `wp_pradeshiya_sabha_users` (`ID`, `username`, `password`, `first_na
 (9, 'yakkwila', '$2y$10$zjm8ikYevIZqKr/RR00cxOKgNWVaPR.MRJ.W/jJUk.advhVIicdXm', 'Yakkwila', 'User', 'Male', 'yakkwila@pannalaps.com', '0000-00-00', '', '', '0733333333', 'Supervisor', 'IT', '', 'Yakkwila Sub-Office', '2021-03-10', 'Admin', '2025-03-28 06:07:20', '2025-03-31 05:25:36', 28, 7, 7, 14),
 (10, 'hamangalla', '$2y$10$QgZ6K03jSU17zvPQLJX1oOppdiYy50rOFJHkuXM2JfHFj.nr4emMW', 'Hamangalla', 'User', 'Male', 'hamangalla@pannalaps.com', '0000-00-00', '', '', '0744444444', 'Manager', 'Finance', '', 'Hamangalla Sub-Office', '2020-11-20', 'Admin', '2025-03-28 06:07:20', '2025-03-31 05:25:39', 28, 7, 7, 14),
 (14, '', '$2y$10$tUCGT8VdZ8ly9sRSphb1.u8T/EY4sG2yFYPApMc2bSziIgih/MLJu', 'Yohani', 'Abeykoon', 'Female', 'yohani@pannalaps.com', '1999-07-25', '730/2\r\nMadinnagoda', '199970704599', '0778439871', 'Team Lead', 'Web', 'Danushka Gangoda', 'Head Office', '2022-08-22', 'Employee', '2025-03-31 05:04:46', '2025-03-31 05:25:41', 28, 7, 7, 14),
-(15, '', '$2y$10$0Smu8zrktNSPfPJcJyjf7OH7367a63IYNaQrckswwclSVqZpl2wOe', 'Chaya', 'Abeykoon', 'Female', 'yohanii725@gmail.com', '1996-03-31', '730/2, Madinndagoda, Rajagiriya', '923456789v', '0771234567', 'HR Assistant', 'HR', 'Dhananji Bandara', 'Head Office', '2024-01-01', 'HOD', '2025-04-01 09:52:42', '2025-04-01 11:22:20', 20, 7, 7, 14);
+(15, '', '$2y$10$Qvqbk0U7lcQrH74czkArPuV6sp.HIbD/iwL02P5f4kjfbp8tJv3OO', 'Chaya', 'Abeykoon', 'Female', 'yohanii725@gmail.com', '1996-03-31', '730/2, Madinndagoda, Rajagiriya', '923456789v', '0771234567', 'HR Assistant', 'HR', 'Dhananji Bandara', 'Head Office', '2024-01-01', 'HOD', '2025-04-01 09:52:42', '2025-04-16 05:37:39', 20, 7, 7, 14);
 
 --
 -- Indexes for dumped tables
@@ -174,7 +175,7 @@ ALTER TABLE `wp_leave_notifications`
 -- AUTO_INCREMENT for table `wp_leave_request`
 --
 ALTER TABLE `wp_leave_request`
-  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `wp_pradeshiya_sabha_users`

@@ -99,7 +99,8 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <p class="text-sm text-green-700"><?php echo $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
+                            <p class="text-sm text-green-700"><?php echo $_SESSION['success_message'];
+                                                                unset($_SESSION['success_message']); ?></p>
                         </div>
                     </div>
                 </div>
@@ -112,7 +113,8 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                             </svg>
                         </div>
                         <div class="ml-3">
-                            <p class="text-sm text-red-700"><?php echo $_SESSION['error_message']; unset($_SESSION['error_message']); ?></p>
+                            <p class="text-sm text-red-700"><?php echo $_SESSION['error_message'];
+                                                            unset($_SESSION['error_message']); ?></p>
                         </div>
                     </div>
                 </div>
@@ -126,7 +128,7 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                     </svg>
                     Leave Balance
                 </h3>
-                
+
                 <!-- Mobile view - Cards instead of table -->
                 <div class="md:hidden space-y-3">
                     <div class="bg-white p-3 rounded-lg shadow-sm">
@@ -139,7 +141,7 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                             <span>Approved: <?= $leaveBalance - $casualLeaveBalance - $sickLeaveBalance - $annualLeaveBalance ?></span>
                         </div>
                     </div>
-                    
+
                     <div class="bg-white p-3 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-medium text-gray-800">Casual Leave</span>
@@ -150,7 +152,7 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                             <span>Approved: <?= $casualLeaveBalance ?></span>
                         </div>
                     </div>
-                    
+
                     <div class="bg-white p-3 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-medium text-gray-800">Sick Leave</span>
@@ -161,7 +163,7 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                             <span>Approved: <?= $sickLeaveBalance ?></span>
                         </div>
                     </div>
-                    
+
                     <div class="bg-white p-3 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-medium text-gray-800">Annual Leave</span>
@@ -173,7 +175,7 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Desktop view - Table -->
                 <div class="hidden md:block overflow-x-auto">
                     <table class="min-w-full bg-white rounded-lg overflow-hidden shadow">

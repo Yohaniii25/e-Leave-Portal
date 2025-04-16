@@ -8,10 +8,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
     exit();
 }
 
-// ✅ Get logged-in admin's sub_office
+// Get logged-in admin's sub_office
 $admin_office = $_SESSION['user']['sub_office'];
 
-// ✅ Modify SQL query to filter users by sub_office
+// Modify SQL query to filter users by sub_office
 $sql = "SELECT ID, CONCAT(first_name, ' ', last_name) AS name, phone_number, department, email 
         FROM wp_pradeshiya_sabha_users 
         WHERE sub_office = ?";
@@ -29,7 +29,7 @@ $result = $stmt->get_result();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Users</title>
+    <title>e-Leave_Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script> <!-- Icons -->
 </head>
@@ -73,6 +73,9 @@ $result = $stmt->get_result();
                                     </a>
                                     <a href="delete-user.php?id=<?php echo $row['ID']; ?>" class="text-red-500 hover:text-red-700" onclick="return confirm('Are you sure you want to delete this user?');">
                                         <i class="ph ph-trash text-xl"></i>
+                                    </a>
+                                    <a href="user-leave-history.php?id=<?php echo $row['ID']; ?>" class="text-purple-500 hover:text-purple-700" title="View Leave History">
+                                        <i class="ph ph-clock-counter-clockwise text-xl"></i>
                                     </a>
                                 </td>
                             </tr>
