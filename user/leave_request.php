@@ -2,13 +2,12 @@
 session_start();
 require '../includes/dbconfig.php';
 
-// PHPMailer
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require '../vendor/autoload.php';
 
-// Check if user is logged in and is an Employee
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Employee') {
     header("Location: ../login.php");
     exit();
@@ -19,7 +18,6 @@ $sub_office = $_SESSION['user']['sub_office'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
 $department = $_SESSION['user']['department'] ?? '';
 
-// Fetch Leave Balances from wp_pradeshiya_sabha_users
 $leaveQuery = $conn->prepare("
     SELECT leave_balance, casual_leave_balance, sick_leave_balance, annual_leave_balance 
     FROM wp_pradeshiya_sabha_users WHERE ID = ?
@@ -44,24 +42,38 @@ $casualLeaveBalance = $leaveData['casual_leave_balance'] ?? 0;
 $sickLeaveBalance = $leaveData['sick_leave_balance'] ?? 0;
 $annualLeaveBalance = $leaveData['annual_leave_balance'] ?? 0;
 
-// Fetch Approved Leave Days from wp_leave_request
+// Fetch Approved leave days per leave_type
 $approvedQuery = $conn->prepare("
-    SELECT SUM(number_of_days) AS approved_days 
-    FROM wp_leave_request 
-    WHERE user_id = ? AND status = 'Approved'
+    SELECT leave_type, SUM(number_of_days) as total_approved
+    FROM wp_leave_request
+    WHERE user_id = ? AND status = 2
+    GROUP BY leave_type
 ");
-
-if (!$approvedQuery) {
-    die("SQL Error: " . $conn->error);
-}
-
 $approvedQuery->bind_param("i", $user_id);
 $approvedQuery->execute();
-$approvedResult = $approvedQuery->get_result()->fetch_assoc();
-$approvedLeaves = $approvedResult['approved_days'] ?? 0;
+$approvedResult = $approvedQuery->get_result();
 
-// Calculate Remaining Leave Balances
-$remainingLeaveBalance = $leaveBalance - $approvedLeaves;
+// Initialize approved leaves
+$approved = [
+    'Casual Leave' => 0,
+    'Sick Leave' => 0,
+    'Annual Leave' => 0,
+];
+
+// Store approved leave by type
+while ($row = $approvedResult->fetch_assoc()) {
+    $approved[$row['leave_type']] = $row['total_approved'];
+}
+
+$remaining = [
+    'Casual Leave' => $casualLeaveBalance - $approved['Casual Leave'],
+    'Sick Leave' => $sickLeaveBalance - $approved['Sick Leave'],
+    'Annual Leave' => $annualLeaveBalance - $approved['Annual Leave'],
+];
+
+$totalApproved = array_sum($approved);
+$totalRemaining = $leaveBalance - $totalApproved;
+
 ?>
 
 
@@ -134,44 +146,44 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                     <div class="bg-white p-3 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-medium text-gray-800">Total Leave</span>
-                            <span class="font-medium text-blue-600"><?= $leaveBalance - ($casualLeaveBalance + $sickLeaveBalance + $annualLeaveBalance) ?> remaining</span>
+                            <span class="font-medium text-blue-600"><?= $leaveBalance ?></span>
                         </div>
                         <div class="flex justify-between text-xs text-gray-500">
-                            <span>Balance: <?= $leaveBalance ?></span>
-                            <span>Approved: <?= $leaveBalance - $casualLeaveBalance - $sickLeaveBalance - $annualLeaveBalance ?></span>
+                            <span>Balance: <?= $totalRemaining ?></span>
+                            <span>Approved: <?= $totalApproved ?></span>
                         </div>
                     </div>
 
                     <div class="bg-white p-3 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-medium text-gray-800">Casual Leave</span>
-                            <span class="font-medium text-blue-600"><?= $casualLeaveBalance - 0 ?> remaining</span>
+                            <span class="font-medium text-blue-600"><?= $casualLeaveBalance ?></span>
                         </div>
                         <div class="flex justify-between text-xs text-gray-500">
-                            <span>Balance: <?= $casualLeaveBalance ?></span>
-                            <span>Approved: <?= $casualLeaveBalance ?></span>
+                            <span>Balance: <?= $approved['Casual Leave'] ?></span>
+                            <span>Approved: <?= $remaining['Casual Leave'] ?></span>
                         </div>
                     </div>
 
                     <div class="bg-white p-3 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-medium text-gray-800">Sick Leave</span>
-                            <span class="font-medium text-blue-600"><?= $sickLeaveBalance - 0 ?> remaining</span>
+                            <span class="font-medium text-blue-600"><?= $sickLeaveBalance ?></span>
                         </div>
                         <div class="flex justify-between text-xs text-gray-500">
-                            <span>Balance: <?= $sickLeaveBalance ?></span>
-                            <span>Approved: <?= $sickLeaveBalance ?></span>
+                            <span>Balance: <?= $approved['Sick Leave'] ?></span>
+                            <span>Approved: <?= $remaining['Sick Leave'] ?></span>
                         </div>
                     </div>
 
                     <div class="bg-white p-3 rounded-lg shadow-sm">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-medium text-gray-800">Annual Leave</span>
-                            <span class="font-medium text-blue-600"><?= $annualLeaveBalance - 0 ?> remaining</span>
+                            <span class="font-medium text-blue-600"><?= $annualLeaveBalance ?></span>
                         </div>
                         <div class="flex justify-between text-xs text-gray-500">
-                            <span>Balance: <?= $annualLeaveBalance ?></span>
-                            <span>Approved: <?= $annualLeaveBalance ?></span>
+                            <span>Balance: <?= $approved['Annual Leave'] ?></span>
+                            <span>Approved: <?= $remaining['Annual Leave'] ?></span>
                         </div>
                     </div>
                 </div>
@@ -182,7 +194,7 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                         <thead>
                             <tr class="bg-blue-600 text-white">
                                 <th class="px-4 py-3 text-left text-sm font-medium">Leave Type</th>
-                                <th class="px-4 py-3 text-left text-sm font-medium">Balance</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">Total Leaves</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">Approved</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">Remaining</th>
                             </tr>
@@ -191,30 +203,31 @@ $remainingLeaveBalance = $leaveBalance - $approvedLeaves;
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 font-medium">Total Leave</td>
                                 <td class="px-4 py-3"><?= $leaveBalance ?></td>
-                                <td class="px-4 py-3"><?= $leaveBalance - $casualLeaveBalance - $sickLeaveBalance - $annualLeaveBalance ?></td>
-                                <td class="px-4 py-3 font-medium text-blue-600"><?= $leaveBalance - ($casualLeaveBalance + $sickLeaveBalance + $annualLeaveBalance) ?></td>
+                                <td class="px-4 py-3"><?= $totalApproved ?></td>
+                                <td class="px-4 py-3 font-medium text-blue-600"><?= $totalRemaining ?></td>
                             </tr>
                             <tr class="bg-gray-50 hover:bg-gray-100">
                                 <td class="px-4 py-3 font-medium">Casual Leave</td>
                                 <td class="px-4 py-3"><?= $casualLeaveBalance ?></td>
-                                <td class="px-4 py-3"><?= $casualLeaveBalance ?></td>
-                                <td class="px-4 py-3 font-medium text-blue-600"><?= $casualLeaveBalance - 0 ?></td>
+                                <td class="px-4 py-3"><?= $approved['Casual Leave'] ?></td>
+                                <td class="px-4 py-3 font-medium text-blue-600"><?= $remaining['Casual Leave'] ?></td>
                             </tr>
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 font-medium">Sick Leave</td>
                                 <td class="px-4 py-3"><?= $sickLeaveBalance ?></td>
-                                <td class="px-4 py-3"><?= $sickLeaveBalance ?></td>
-                                <td class="px-4 py-3 font-medium text-blue-600"><?= $sickLeaveBalance - 0 ?></td>
+                                <td class="px-4 py-3"><?= $approved['Sick Leave'] ?></td>
+                                <td class="px-4 py-3 font-medium text-blue-600"><?= $remaining['Sick Leave'] ?></td>
                             </tr>
                             <tr class="bg-gray-50 hover:bg-gray-100">
                                 <td class="px-4 py-3 font-medium">Annual Leave</td>
                                 <td class="px-4 py-3"><?= $annualLeaveBalance ?></td>
-                                <td class="px-4 py-3"><?= $annualLeaveBalance ?></td>
-                                <td class="px-4 py-3 font-medium text-blue-600"><?= $annualLeaveBalance - 0 ?></td>
+                                <td class="px-4 py-3"><?= $approved['Annual Leave'] ?></td>
+                                <td class="px-4 py-3 font-medium text-blue-600"><?= $remaining['Annual Leave'] ?></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+
             </div>
 
             <!-- Leave Request Form - Mobile Responsive -->

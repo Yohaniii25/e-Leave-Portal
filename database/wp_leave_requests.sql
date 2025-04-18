@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 16, 2025 at 08:12 AM
+-- Generation Time: Apr 18, 2025 at 09:23 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -63,20 +63,12 @@ CREATE TABLE `wp_leave_request` (
   `number_of_days` int(11) NOT NULL,
   `reason` text DEFAULT NULL,
   `substitute` varchar(255) DEFAULT NULL,
-  `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
+  `status` int(11) DEFAULT NULL COMMENT '1-pending, 2-accept, 3-reject',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `sub_office` varchar(255) NOT NULL
+  `sub_office` varchar(255) NOT NULL,
+  `rejection_remark` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `wp_leave_request`
---
-
-INSERT INTO `wp_leave_request` (`request_id`, `user_id`, `leave_type`, `leave_start_date`, `leave_end_date`, `number_of_days`, `reason`, `substitute`, `status`, `created_at`, `updated_at`, `sub_office`) VALUES
-(20, 14, 'Sick Leave', '2025-04-03', '2025-04-05', 3, 'ddsdsd', 'Lakmi Perera', 'Pending', '2025-04-03 09:56:21', '2025-04-03 09:56:21', 'Head Office'),
-(21, 14, 'Sick Leave', '2025-04-03', '2025-04-05', 3, 'fever', 'Lakmi Perera', 'Pending', '2025-04-03 10:00:28', '2025-04-03 10:00:28', 'Head Office'),
-(23, 14, 'Annual Leave', '2025-04-03', '2025-04-04', 2, 'chiki chiki bum bum', 'Lakmi Perera', 'Pending', '2025-04-03 12:48:32', '2025-04-03 12:48:32', 'Head Office');
 
 -- --------------------------------------------------------
 
@@ -120,8 +112,9 @@ INSERT INTO `wp_pradeshiya_sabha_users` (`ID`, `username`, `password`, `first_na
 (8, 'makandura', '$2y$10$lKnb5/0sKwmf6NG.SGuN7OT1mk7NQO9VY.PFsgvLkCEUY6bhnwV0K', 'Makandura', 'User', 'Male', 'makandura@pannalaps.com', '0000-00-00', '', '', '0722222222', 'Officer', 'Operations', '', 'Makandura Sub-Office', '2022-06-15', 'Admin', '2025-03-28 06:07:20', '2025-03-31 05:25:34', 28, 7, 7, 14),
 (9, 'yakkwila', '$2y$10$zjm8ikYevIZqKr/RR00cxOKgNWVaPR.MRJ.W/jJUk.advhVIicdXm', 'Yakkwila', 'User', 'Male', 'yakkwila@pannalaps.com', '0000-00-00', '', '', '0733333333', 'Supervisor', 'IT', '', 'Yakkwila Sub-Office', '2021-03-10', 'Admin', '2025-03-28 06:07:20', '2025-03-31 05:25:36', 28, 7, 7, 14),
 (10, 'hamangalla', '$2y$10$QgZ6K03jSU17zvPQLJX1oOppdiYy50rOFJHkuXM2JfHFj.nr4emMW', 'Hamangalla', 'User', 'Male', 'hamangalla@pannalaps.com', '0000-00-00', '', '', '0744444444', 'Manager', 'Finance', '', 'Hamangalla Sub-Office', '2020-11-20', 'Admin', '2025-03-28 06:07:20', '2025-03-31 05:25:39', 28, 7, 7, 14),
-(14, '', '$2y$10$tUCGT8VdZ8ly9sRSphb1.u8T/EY4sG2yFYPApMc2bSziIgih/MLJu', 'Yohani', 'Abeykoon', 'Female', 'yohani@pannalaps.com', '1999-07-25', '730/2\r\nMadinnagoda', '199970704599', '0778439871', 'Team Lead', 'Web', 'Danushka Gangoda', 'Head Office', '2022-08-22', 'Employee', '2025-03-31 05:04:46', '2025-03-31 05:25:41', 28, 7, 7, 14),
-(15, '', '$2y$10$Qvqbk0U7lcQrH74czkArPuV6sp.HIbD/iwL02P5f4kjfbp8tJv3OO', 'Chaya', 'Abeykoon', 'Female', 'yohanii725@gmail.com', '1996-03-31', '730/2, Madinndagoda, Rajagiriya', '923456789v', '0771234567', 'HR Assistant', 'HR', 'Dhananji Bandara', 'Head Office', '2024-01-01', 'HOD', '2025-04-01 09:52:42', '2025-04-16 05:37:39', 20, 7, 7, 14);
+(14, '', '$2y$10$tUCGT8VdZ8ly9sRSphb1.u8T/EY4sG2yFYPApMc2bSziIgih/MLJu', 'Yohani', 'Abeykoon', 'Female', 'yohani@pannalaps.com', '1999-07-25', '730/2\r\nMadinnagoda', '199970704599', '0778439871', 'Team Lead', 'Web', 'Danushka Gangoda', 'Head Office', '2022-08-22', 'Employee', '2025-03-31 05:04:46', '2025-04-18 05:02:15', 28, 4, 0, 6),
+(15, '', '$2y$10$Qvqbk0U7lcQrH74czkArPuV6sp.HIbD/iwL02P5f4kjfbp8tJv3OO', 'Chaya', 'Abeykoon', 'Female', 'yohanii725@gmail.com', '1996-03-31', '730/2, Madinndagoda, Rajagiriya', '923456789v', '0771234567', 'HR Assistant', 'HR', 'Dhananji Bandara', 'Head Office', '2024-01-01', 'HOD', '2025-04-01 09:52:42', '2025-04-17 11:01:18', 28, 7, 7, 14),
+(16, '', '$2y$10$TztY/Nw23GSbRfuR489lreOCPlcX2eyF1fqcIoDJ.cSA7RKQIcDyC', 'Ushan', 'Abeykoon', 'Male', 'contract@gmail.com', '1999-06-01', '730/2\r\nMadinnagoda', '923456789v', '0778439871', 'HR Assistant', 'HR', 'Dhananji Bandara', 'Head Office', '2025-04-18', 'Employee', '2025-04-18 04:28:04', '2025-04-18 04:28:04', 14, 7, 7, 0);
 
 --
 -- Indexes for dumped tables
@@ -175,13 +168,13 @@ ALTER TABLE `wp_leave_notifications`
 -- AUTO_INCREMENT for table `wp_leave_request`
 --
 ALTER TABLE `wp_leave_request`
-  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `wp_pradeshiya_sabha_users`
 --
 ALTER TABLE `wp_pradeshiya_sabha_users`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Constraints for dumped tables

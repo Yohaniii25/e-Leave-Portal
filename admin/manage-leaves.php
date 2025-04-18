@@ -67,14 +67,25 @@ $result = $stmt->get_result();
                             <td class="py-2 px-4 border"><?php echo $row['leave_start_date']; ?></td>
                             <td class="py-2 px-4 border"><?php echo $row['leave_end_date']; ?></td>
                             <td class="py-2 px-4 border"><?php echo $row['reason']; ?></td>
-                            <td class="py-2 px-4 border font-semibold text-<?php echo ($row['status'] == 'Approved') ? 'green' : (($row['status'] == 'Rejected') ? 'red' : 'yellow'); ?>-600">
-                                <?php if ($row['status'] == 'Rejected' && !empty($row['rejection_remark'])): ?>
+                            <td class="py-2 px-4 border font-semibold 
+    <?php
+                        if ($row['status'] == 2) echo 'text-green-600';
+                        elseif ($row['status'] == 3) echo 'text-red-600';
+                        else echo 'text-yellow-600';
+    ?>">
+                                <?php
+                                if ($row['status'] == 1) echo 'Pending';
+                                elseif ($row['status'] == 2) echo 'Approved';
+                                elseif ($row['status'] == 3) echo 'Rejected';
+                                ?>
+
+                                <?php if ($row['status'] == 3 && !empty($row['rejection_remark'])): ?>
                                     <div class="text-sm text-gray-600 italic mt-1">Remark: <?= htmlspecialchars($row['rejection_remark']); ?></div>
                                 <?php endif; ?>
-
                             </td>
+
                             <td class="py-2 px-4 border flex gap-2">
-                                <?php if ($row['status'] === 'Pending'): ?>
+                                <?php if ($row['status'] === 1): ?>
                                     <form method="POST" action="process-leave.php" onsubmit="return confirm('Are you sure you want to approve this leave?');">
                                         <input type="hidden" name="request_id" value="<?php echo $row['request_id']; ?>">
                                         <input type="hidden" name="action" value="approve">

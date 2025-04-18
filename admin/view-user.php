@@ -7,12 +7,12 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
     exit();
 }
 $admin_office = $_SESSION['user']['sub_office'];
-// check if ID is provided
+
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("Invalid user ID.");
 }
 $user_id = intval($_GET['id']);
-// fetch user details
+
 $sql = "SELECT * FROM wp_pradeshiya_sabha_users WHERE ID = ? AND sub_office = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("is", $user_id, $admin_office);
@@ -25,6 +25,7 @@ $user = $result->fetch_assoc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,19 +36,23 @@ $user = $result->fetch_assoc();
         .user-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+
         .user-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
+
         .detail-item {
             opacity: 0;
             animation: fadeInSlide 0.6s forwards;
         }
+
         @keyframes fadeInSlide {
             from {
                 opacity: 0;
                 transform: translateX(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -55,6 +60,7 @@ $user = $result->fetch_assoc();
         }
     </style>
 </head>
+
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
         <div class="user-card bg-white rounded-xl shadow-lg overflow-hidden max-w-5xl mx-auto">
@@ -68,7 +74,7 @@ $user = $result->fetch_assoc();
                 </h1>
                 <p class="text-white opacity-80"><?php echo htmlspecialchars($user['designation']); ?></p>
             </div>
-            
+
             <!-- Two-column layout for details -->
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -82,7 +88,7 @@ $user = $result->fetch_assoc();
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div class="detail-item" style="animation-delay: 0.2s">
                             <div class="flex items-center">
                                 <i class="fas fa-phone text-green-500 mr-3 w-8 text-center"></i>
@@ -91,7 +97,7 @@ $user = $result->fetch_assoc();
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div class="detail-item" style="animation-delay: 0.3s">
                             <div class="flex items-center">
                                 <i class="fas fa-user text-green-500 mr-3 w-8 text-center"></i>
@@ -100,7 +106,7 @@ $user = $result->fetch_assoc();
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div class="detail-item" style="animation-delay: 0.4s">
                             <div class="flex items-center">
                                 <i class="fas fa-venus-mars text-purple-500 mr-3 w-8 text-center"></i>
@@ -109,7 +115,7 @@ $user = $result->fetch_assoc();
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div class="detail-item" style="animation-delay: 0.5s">
                             <div class="flex items-center">
                                 <i class="fas fa-building text-indigo-500 mr-3 w-8 text-center"></i>
@@ -119,7 +125,7 @@ $user = $result->fetch_assoc();
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Right Column -->
                     <div class="space-y-4">
                         <div class="detail-item" style="animation-delay: 0.6s">
@@ -130,7 +136,7 @@ $user = $result->fetch_assoc();
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div class="detail-item" style="animation-delay: 0.7s">
                             <div class="flex items-center">
                                 <i class="fas fa-building text-blue-600 mr-3 w-8 text-center"></i>
@@ -139,7 +145,7 @@ $user = $result->fetch_assoc();
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div class="detail-item" style="animation-delay: 0.8s">
                             <div class="flex items-center">
                                 <i class="fas fa-calendar-alt text-orange-500 mr-3 w-8 text-center"></i>
@@ -148,7 +154,7 @@ $user = $result->fetch_assoc();
                                 </p>
                             </div>
                         </div>
-                        
+
                         <div class="detail-item" style="animation-delay: 0.9s">
                             <div class="flex items-center">
                                 <i class="fas fa-birthday-cake text-pink-500 mr-3 w-8 text-center"></i>
@@ -160,7 +166,31 @@ $user = $result->fetch_assoc();
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Leave Balances Section -->
+            <div class="mt-10">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Leave Balances</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                    <div class="bg-blue-100 p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold text-blue-700">Total Leave</h3>
+                        <p class="text-2xl text-blue-900 font-bold"><?php echo htmlspecialchars($user['leave_balance']); ?></p>
+                    </div>
+                    <div class="bg-yellow-100 p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold text-yellow-700">Casual Leave</h3>
+                        <p class="text-2xl text-yellow-900 font-bold"><?php echo htmlspecialchars($user['casual_leave_balance']); ?></p>
+                    </div>
+                    <div class="bg-green-100 p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold text-green-700">Sick Leave</h3>
+                        <p class="text-2xl text-green-900 font-bold"><?php echo htmlspecialchars($user['sick_leave_balance']); ?></p>
+                    </div>
+                    <div class="bg-purple-100 p-4 rounded-lg shadow">
+                        <h3 class="text-lg font-semibold text-purple-700">Annual Leave</h3>
+                        <p class="text-2xl text-purple-900 font-bold"><?php echo htmlspecialchars($user['annual_leave_balance']); ?></p>
+                    </div>
+                </div>
+            </div>
+
+
             <!-- Footer - Full Width -->
             <div class="bg-gray-100 p-4 text-center">
                 <a href="manage-users.php" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
@@ -170,4 +200,5 @@ $user = $result->fetch_assoc();
         </div>
     </div>
 </body>
+
 </html>
