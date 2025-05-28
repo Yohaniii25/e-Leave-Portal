@@ -35,10 +35,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $head_of_department = trim($_POST['head_of_department']);
         $designation = isset($_POST['designation']) ? $_POST['designation'] : '';
         $date_of_joining = isset($_POST['date_of_joining']) ? $_POST['date_of_joining'] : null;
-        $casual_leave = isset($_POST['casual_leave_balance']) ? (int)$_POST['casual_leave_balance'] : 7;
-        $sick_leave = isset($_POST['sick_leave_balance']) ? (int)$_POST['sick_leave_balance'] : 7;
-        $annual_leave = isset($_POST['annual_leave_balance']) ? (int)$_POST['annual_leave_balance'] : 14;
-        $leave_balance = $casual_leave + $sick_leave + $annual_leave;
+        $casual_leave = isset($_POST['casual_leave_balance']) ? (int)$_POST['casual_leave_balance'] : 21;
+        $sick_leave = isset($_POST['sick_leave_balance']) ? (int)$_POST['sick_leave_balance'] : 24;
+        $leave_balance = $casual_leave + $sick_leave;
         
         // Generate username (using email username part or first initial + last name)
         $username = strtolower(explode('@', $email)[0]);
@@ -96,7 +95,7 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
     username, password, first_name, last_name, gender, email, birthdate, 
     address, NIC, service_number, phone_number, designation, department, head_of_department, 
     sub_office, date_of_joining, user_role, leave_balance, 
-    casual_leave_balance, sick_leave_balance, annual_leave_balance
+    casual_leave_balance, sick_leave_balance
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
@@ -126,7 +125,7 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
     $leave_balance,
     $casual_leave,
     $sick_leave,
-    $annual_leave
+
 );
 
         if (!$stmt->execute()) {
@@ -296,21 +295,17 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
 
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-1">Casual Leave Balance</label>
-                            <input type="number" name="casual_leave_balance" value="<?php echo isset($_POST['casual_leave_balance']) ? (int)$_POST['casual_leave_balance'] : 7; ?>"
+                            <input type="number" name="casual_leave_balance" value="<?php echo isset($_POST['casual_leave_balance']) ? (int)$_POST['casual_leave_balance'] : 21; ?>"
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                         </div>
 
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-1">Sick Leave Balance</label>
-                            <input type="number" name="sick_leave_balance" value="<?php echo isset($_POST['sick_leave_balance']) ? (int)$_POST['sick_leave_balance'] : 7; ?>"
+                            <input type="number" name="sick_leave_balance" value="<?php echo isset($_POST['sick_leave_balance']) ? (int)$_POST['sick_leave_balance'] : 24; ?>"
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                         </div>
 
-                        <div>
-                            <label class="block text-gray-700 text-sm font-medium mb-1">Annual Leave Balance</label>
-                            <input type="number" name="annual_leave_balance" value="<?php echo isset($_POST['annual_leave_balance']) ? (int)$_POST['annual_leave_balance'] : 14; ?>"
-                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                        </div>
+
 
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-1">Total Leave Balance <span class="text-gray-400">(Auto-calculated)</span></label>
@@ -352,14 +347,13 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
     document.addEventListener('DOMContentLoaded', function() {
         const casualLeave = document.querySelector('input[name="casual_leave_balance"]');
         const sickLeave = document.querySelector('input[name="sick_leave_balance"]');
-        const annualLeave = document.querySelector('input[name="annual_leave_balance"]');
         const totalLeave = document.getElementById('total_leave');
         
         function calculateTotal() {
             const casual = parseInt(casualLeave.value) || 0;
             const sick = parseInt(sickLeave.value) || 0;
-            const annual = parseInt(annualLeave.value) || 0;
-            totalLeave.value = casual + sick + annual;
+            
+            totalLeave.value = casual + sick ;
         }
         
         // Initial calculation
@@ -368,7 +362,7 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
         // Add event listeners to recalculate on change
         casualLeave.addEventListener('input', calculateTotal);
         sickLeave.addEventListener('input', calculateTotal);
-        annualLeave.addEventListener('input', calculateTotal);
+        
     });
     </script>
 </body>

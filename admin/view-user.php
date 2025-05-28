@@ -183,10 +183,7 @@ $user = $result->fetch_assoc();
                         <h3 class="text-lg font-semibold text-green-700">Sick Leave</h3>
                         <p class="text-2xl text-green-900 font-bold"><?php echo htmlspecialchars($user['sick_leave_balance']); ?></p>
                     </div>
-                    <div class="bg-purple-100 p-4 rounded-lg shadow">
-                        <h3 class="text-lg font-semibold text-purple-700">Annual Leave</h3>
-                        <p class="text-2xl text-purple-900 font-bold"><?php echo htmlspecialchars($user['annual_leave_balance']); ?></p>
-                    </div>
+
                 </div>
             </div>
 

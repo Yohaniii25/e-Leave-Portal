@@ -9,6 +9,7 @@
         <div class="hidden md:flex space-x-6">
             <a href="./manage-leaves.php" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Manage Leaves</a>
             <a href="./manage-users.php" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Users</a>
+            <a href="./add-manual-leaves.php" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Add Manual Leaves</a>
             <a href="https://pannalaps.lk/" target="_blank" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Visit Website</a>
         </div>
 
@@ -31,6 +32,7 @@
     <div id="mobile-menu" class="md:hidden bg-blue-600 text-white p-4 hidden">
         <a href="./manage-leaves.php" class="block py-2 px-4">Manage Leaves</a>
         <a href="./manage-users.php" class="block py-2 px-4">Users</a>
+        <a href="./add-manual-leaves.php" class="block py-2 px-4">Add Manual Leaves</a>
         <a href="https://pannalaps.lk/" target="_blank" class="block py-2 px-4">Visit Website</a>
         <form method="POST" action="logout.php" class="mt-4">
             <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-md w-full">Logout</button>
