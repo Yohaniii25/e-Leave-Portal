@@ -11,7 +11,7 @@
             <a href="./leave_history.php" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Leave History</a>
             <!-- profile -->
             <a href="./profile.php" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Profile</a>
-            <a href="https://testing.sltdigitalweb.lk/pannalaps/" target="_blank" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Visit Website</a>
+            <a href="https://pannalaps.lk/" target="_blank" class="text-white hover:bg-blue-700 px-4 py-2 rounded-md">Visit Website</a>
         </div>
 
         <!-- Logout Button -->

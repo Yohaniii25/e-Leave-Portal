@@ -61,10 +61,7 @@ if ($stmt) {
         </div>
 
         <!-- Leave Balance Section -->
-        <div class="mt-6 bg-blue-100 p-4 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold text-gray-800">Leave Balance</h2>
-            <p class="text-gray-700 mt-2">You have <strong><?php echo htmlspecialchars($leave_balance); ?></strong> days of leave remaining.</p>
-        </div>
+
 
         <!-- Leave Requests Section -->
         <div class="mt-6 bg-white p-6 rounded-lg shadow-lg">
@@ -82,20 +79,41 @@ if ($stmt) {
                                 <th class="px-4 py-2 border">Requested On</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php foreach ($leave_history as $leave) : ?>
-                                <tr class="border">
-                                    <td class="px-4 py-2"><?php echo htmlspecialchars($leave['leave_type']); ?></td>
-                                    <td class="px-4 py-2"><?php echo htmlspecialchars($leave['leave_start_date']); ?></td>
-                                    <td class="px-4 py-2"><?php echo htmlspecialchars($leave['leave_end_date']); ?></td>
-                                    <td class="px-4 py-2"><?php echo htmlspecialchars($leave['number_of_days']); ?></td>
-                                    <td class="px-4 py-2 font-semibold <?php echo ($leave['status'] === 'Approved') ? 'text-green-600' : ($leave['status'] === 'Rejected' ? 'text-red-600' : 'text-yellow-600'); ?>">
-                                        <?php echo htmlspecialchars($leave['status']); ?>
-                                    </td>
-                                    <td class="px-4 py-2"><?php echo htmlspecialchars($leave['created_at']); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
+<tbody>
+    <?php foreach ($leave_history as $leave) : ?>
+        <?php
+            // Map status codes to labels and classes
+            switch ($leave['status']) {
+                case 1:
+                    $status_label = 'Pending';
+                    $status_class = 'text-yellow-600';
+                    break;
+                case 2:
+                    $status_label = 'Approved';
+                    $status_class = 'text-green-600';
+                    break;
+                case 3:
+                    $status_label = 'Rejected';
+                    $status_class = 'text-red-600';
+                    break;
+                default:
+                    $status_label = 'Unknown';
+                    $status_class = 'text-gray-600';
+            }
+        ?>
+        <tr class="border">
+            <td class="px-4 py-2"><?php echo htmlspecialchars($leave['leave_type']); ?></td>
+            <td class="px-4 py-2"><?php echo htmlspecialchars($leave['leave_start_date']); ?></td>
+            <td class="px-4 py-2"><?php echo htmlspecialchars($leave['leave_end_date']); ?></td>
+            <td class="px-4 py-2"><?php echo htmlspecialchars($leave['number_of_days']); ?></td>
+            <td class="px-4 py-2 font-semibold <?php echo $status_class; ?>">
+                <?php echo $status_label; ?>
+            </td>
+            <td class="px-4 py-2"><?php echo htmlspecialchars($leave['created_at']); ?></td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
+
                     </table>
                 </div>
             <?php else : ?>
@@ -123,7 +141,7 @@ if ($stmt) {
             <div class="bg-yellow-500 text-white p-6 rounded-lg shadow-lg hover:bg-yellow-600">
                 <h2 class="text-xl font-semibold">Visit Website</h2>
                 <p class="mt-2">Check latest updates on the official website.</p>
-                <a href="https://testing.sltdigitalweb.lk/pannalaps" target="_blank" class="text-white mt-4 inline-block">Go to Website →</a>
+                <a href="https://pannalaps.lk/" target="_blank" class="text-white mt-4 inline-block">Go to Website →</a>
             </div>
         </div>
     </div>

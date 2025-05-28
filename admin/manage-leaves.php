@@ -15,6 +15,8 @@ $sql = "SELECT r.*, u.first_name, u.last_name, u.designation, u.department
         FROM wp_leave_request r
         JOIN wp_pradeshiya_sabha_users u ON r.user_id = u.ID
         WHERE u.sub_office = ?";
+
+
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $admin_office);
 $stmt->execute();
@@ -45,6 +47,7 @@ $result = $stmt->get_result();
 
                         <th class="px-4 py-2 border">User ID</th>
                         <th class="py-2 px-4 border">Employee</th>
+                        <th class="py-2 px-4 border">Substitute</th>
                         <th class="py-2 px-4 border">Department</th>
                         <th class="py-2 px-4 border">Leave Type</th>
                         <th class="py-2 px-4 border">From</th>
@@ -62,6 +65,10 @@ $result = $stmt->get_result();
                             </td>
 
                             <td class="py-2 px-4 border"><?php echo $row['first_name'] . ' ' . $row['last_name']; ?></td>
+                            <td class="py-2 px-4 border">
+    <?= !empty($row['substitute']) ? htmlspecialchars($row['substitute']) : '<span class="text-gray-400 italic">None</span>'; ?>
+</td>
+
                             <td class="py-2 px-4 border"><?php echo $row['department']; ?></td>
                             <td class="py-2 px-4 border"><?php echo $row['leave_type']; ?></td>
                             <td class="py-2 px-4 border"><?php echo $row['leave_start_date']; ?></td>

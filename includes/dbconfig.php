@@ -2,7 +2,7 @@
 $servername = "localhost"; 
 $username = "root"; 
 $password = ""; 
-$dbname = "wp_leave_requests"; 
+$dbname = "pannalaps_leave"; 
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);

@@ -88,6 +88,10 @@ $totalRemaining = $leaveBalance - $totalApproved;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Request Leave</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
 </head>
 
 <body class="bg-gray-50 min-h-screen font-sans">
@@ -249,10 +253,25 @@ $totalRemaining = $leaveBalance - $totalApproved;
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Substitute (Optional)</label>
-                        <input type="text" name="substitute" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2 px-3 border" placeholder="Colleague's name">
-                    </div>
+<div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Substitute (Optional)</label>
+    <input type="text" id="substitute" name="substitute" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2 px-3 border" placeholder="Colleague's name">
+</div>
+
+                    
+                    <script>
+                        $(function() {
+                        $("#substitute").autocomplete({
+                        source: 'search_users.php',
+                        minLength: 2,
+                        select: function(event, ui) {
+                        $("#substitute").val(ui.item.label); 
+                        return false;
+                        }
+                    });
+                });
+                    </script>
+
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
