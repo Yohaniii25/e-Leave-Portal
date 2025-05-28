@@ -19,7 +19,7 @@ $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_nam
 $department = $_SESSION['user']['department'] ?? '';
 
 $leaveQuery = $conn->prepare("
-    SELECT leave_balance, casual_leave_balance, sick_leave_balance, annual_leave_balance 
+    SELECT leave_balance, casual_leave_balance, sick_leave_balance, duty_leave_count 
     FROM wp_pradeshiya_sabha_users WHERE ID = ?
 ");
 
@@ -40,7 +40,8 @@ if (!$leaveData) {
 $leaveBalance = $leaveData['leave_balance'] ?? 0;
 $casualLeaveBalance = $leaveData['casual_leave_balance'] ?? 0;
 $sickLeaveBalance = $leaveData['sick_leave_balance'] ?? 0;
-$annualLeaveBalance = $leaveData['annual_leave_balance'] ?? 0;
+$dutyLeaveCount = $leaveData['duty_leave_count'] ?? 0;
+
 
 // Fetch Approved leave days per leave_type
 $approvedQuery = $conn->prepare("
@@ -57,7 +58,6 @@ $approvedResult = $approvedQuery->get_result();
 $approved = [
     'Casual Leave' => 0,
     'Sick Leave' => 0,
-    'Annual Leave' => 0,
 ];
 
 // Store approved leave by type
@@ -68,7 +68,7 @@ while ($row = $approvedResult->fetch_assoc()) {
 $remaining = [
     'Casual Leave' => $casualLeaveBalance - $approved['Casual Leave'],
     'Sick Leave' => $sickLeaveBalance - $approved['Sick Leave'],
-    'Annual Leave' => $annualLeaveBalance - $approved['Annual Leave'],
+    
 ];
 
 $totalApproved = array_sum($approved);
@@ -180,16 +180,7 @@ $totalRemaining = $leaveBalance - $totalApproved;
                         </div>
                     </div>
 
-                    <div class="bg-white p-3 rounded-lg shadow-sm">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-medium text-gray-800">Annual Leave</span>
-                            <span class="font-medium text-blue-600"><?= $annualLeaveBalance ?></span>
-                        </div>
-                        <div class="flex justify-between text-xs text-gray-500">
-                            <span>Balance: <?= $approved['Annual Leave'] ?></span>
-                            <span>Approved: <?= $remaining['Annual Leave'] ?></span>
-                        </div>
-                    </div>
+
                 </div>
 
                 <!-- Desktop view - Table -->
@@ -222,12 +213,7 @@ $totalRemaining = $leaveBalance - $totalApproved;
                                 <td class="px-4 py-3"><?= $approved['Sick Leave'] ?></td>
                                 <td class="px-4 py-3 font-medium text-blue-600"><?= $remaining['Sick Leave'] ?></td>
                             </tr>
-                            <tr class="bg-gray-50 hover:bg-gray-100">
-                                <td class="px-4 py-3 font-medium">Annual Leave</td>
-                                <td class="px-4 py-3"><?= $annualLeaveBalance ?></td>
-                                <td class="px-4 py-3"><?= $approved['Annual Leave'] ?></td>
-                                <td class="px-4 py-3 font-medium text-blue-600"><?= $remaining['Annual Leave'] ?></td>
-                            </tr>
+
                         </tbody>
                     </table>
                 </div>
@@ -247,7 +233,7 @@ $totalRemaining = $leaveBalance - $totalApproved;
                         <label class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
                         <select name="leave_type" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2 px-3 border">
                             <option value="">--Select Type--</option>
-                            <option value="Annual Leave">Annual Leave</option>
+                            <option value="Duty Leave">Duty Leave</option>
                             <option value="Sick Leave">Sick Leave</option>
                             <option value="Casual Leave">Casual Leave</option>
                         </select>

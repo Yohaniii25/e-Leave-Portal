@@ -4,6 +4,7 @@ require '../includes/dbconfig.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+
 require '../vendor/autoload.php';
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Employee') {
@@ -17,13 +18,13 @@ $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_nam
 $department = $_SESSION['user']['department'] ?? '';
 
 
-$balanceQuery = $conn->prepare("SELECT casual_leave_balance, sick_leave_balance, annual_leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?");
+$balanceQuery = $conn->prepare("SELECT casual_leave_balance, sick_leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?");
 $balanceQuery->bind_param("i", $user_id);
 $balanceQuery->execute();
 $balances = $balanceQuery->get_result()->fetch_assoc();
 
 
-$used = ['Casual Leave' => 0, 'Sick Leave' => 0, 'Annual Leave' => 0];
+$used = ['Casual Leave' => 0, 'Sick Leave' => 0];
 $usageQuery = $conn->prepare("
     SELECT leave_type, SUM(number_of_days) AS total_requested 
     FROM wp_leave_request 
@@ -40,7 +41,6 @@ while ($row = $usageResult->fetch_assoc()) {
 $remaining = [
     'Casual Leave' => $balances['casual_leave_balance'] - $used['Casual Leave'],
     'Sick Leave'   => $balances['sick_leave_balance']   - $used['Sick Leave'],
-    'Annual Leave' => $balances['annual_leave_balance'] - $used['Annual Leave'],
 ];
 
 
@@ -55,23 +55,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $end = new DateTime($end_date);
     $days = $start->diff($end)->days + 1;
 
-    if (!isset($remaining[$leave_type])) {
-        $_SESSION['error_message'] = "Invalid leave type selected.";
-        header("Location: leave_request.php");
-        exit();
+    if ($leave_type !== 'Duty Leave') {
+        if (!isset($remaining[$leave_type])) {
+            $_SESSION['error_message'] = "Invalid leave type selected.";
+            header("Location: leave_request.php");
+            exit();
+        }
+
+        if ($days > $remaining[$leave_type]) {
+            $_SESSION['error_message'] = "You only have {$remaining[$leave_type]} day(s) left for {$leave_type}.";
+            header("Location: leave_request.php");
+            exit();
+        }
     }
 
-    if ($days > $remaining[$leave_type]) {
-        $_SESSION['error_message'] = "You only have {$remaining[$leave_type]} day(s) left for {$leave_type}.";
-        header("Location: leave_request.php");
-        exit();
-    }
 
     $stmt = $conn->prepare("INSERT INTO wp_leave_request (user_id, leave_type, leave_start_date, leave_end_date, number_of_days, reason, substitute, sub_office, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)");
     $stmt->bind_param("isssissi", $user_id, $leave_type, $start_date, $end_date, $days, $reason, $substitute, $sub_office);
 
     if ($stmt->execute()) {
         $request_id = $stmt->insert_id;
+
+        if ($leave_type === 'Duty Leave') {
+            // Increment the duty_leave_count in the users table
+            $updateDutyLeave = $conn->prepare("
+        UPDATE wp_pradeshiya_sabha_users
+        SET duty_leave_count = duty_leave_count + ?
+        WHERE ID = ?
+    ");
+            $updateDutyLeave->bind_param("ii", $days, $user_id);
+            $updateDutyLeave->execute();
+        }
+
 
         $mail = new PHPMailer(true);
         try {
