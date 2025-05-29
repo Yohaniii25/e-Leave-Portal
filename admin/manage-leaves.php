@@ -127,7 +127,7 @@ $result = $stmt->get_result();
             return true;
         }
     </script>
-
+<?php require '../includes/admin-footer.php'; ?>
 </body>
 
 

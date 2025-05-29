@@ -89,7 +89,7 @@ $result = $stmt->get_result();
             </table>
         </div>
     </div>
-
+<?php require '../includes/admin-footer.php'; ?>
 </body>
 
 </html>

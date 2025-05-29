@@ -196,6 +196,7 @@ $user = $result->fetch_assoc();
             </div>
         </div>
     </div>
+    <?php require '../includes/admin-footer.php'; ?>
 </body>
 
 </html>

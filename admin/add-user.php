@@ -365,6 +365,7 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
         
     });
     </script>
+    <?php require '../includes/admin-footer.php'; ?>
 </body>
 
 </html>

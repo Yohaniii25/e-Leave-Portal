@@ -221,6 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
     </script>
 
+<?php require '../includes/admin-footer.php'; ?>
 </body>
 
 </html>

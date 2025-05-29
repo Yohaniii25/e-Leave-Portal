@@ -263,6 +263,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </form>
         </div>
     </div>
+    <?php require '../includes/admin-footer.php'; ?>
 </body>
 
 </html>
