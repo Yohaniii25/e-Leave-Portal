@@ -2,6 +2,7 @@
 require '../includes/dbconfig.php';
 require '../includes/admin-navbar.php';
 
+
 if (!isset($_GET['id'])) {
     echo "No user ID provided.";
     exit();
@@ -25,11 +26,22 @@ $result = $stmt->get_result();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Leave History</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
+<style>
+    body {
+        .text-gray-600 {
+    --tw-text-opacity: 1;
+    color: #0e9720;
+}
+    }
+</style>
+
 <body>
     <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
         <h2 class="text-2xl font-bold mb-4">Leave History of <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h2>
@@ -57,14 +69,20 @@ $result = $stmt->get_result();
                                 <td class="px-4 py-2 border"><?php echo htmlspecialchars($row['number_of_days']); ?></td>
                                 <td class="px-4 py-2 border">
                                     <?php
-                                        $statusColor = match ($row['status']) {
-                                            'Pending' => 'text-yellow-600',
-                                            'Approved' => 'text-green-600',
-                                            'Rejected' => 'text-red-600',
-                                            default => 'text-gray-600',
-                                        };
+                                    $statusText = match ($row['status']) {
+                                        1 => 'Pending',
+                                        2 => 'Approved',
+                                        3 => 'Rejected',
+                                        default => 'Unknown',
+                                    };
+                                    $statusColor = match ($row['status']) {
+                                        'Pending' => 'text-yellow-600',
+                                        'Approved' => 'text-green-600',
+                                        'Rejected' => 'text-red-600',
+                                        default => 'text-gray-600',
+                                    };
                                     ?>
-                                    <span class="<?= $statusColor ?> font-semibold"><?php echo htmlspecialchars($row['status']); ?></span>
+                                    <span class="<?= $statusColor ?> font-semibold"><?php echo htmlspecialchars($statusText); ?></span>
                                 </td>
                                 <td class="px-4 py-2 border"><?php echo htmlspecialchars($row['reason']); ?></td>
                                 <td class="px-4 py-2 border"><?php echo htmlspecialchars($row['created_at']); ?></td>
@@ -79,5 +97,7 @@ $result = $stmt->get_result();
             </table>
         </div>
     </div>
+    <?php require '../includes/admin-footer.php'; ?>
 </body>
+
 </html>
