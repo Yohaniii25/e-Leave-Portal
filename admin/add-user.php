@@ -3,14 +3,10 @@ session_start();
 require '../includes/dbconfig.php';
 require '../includes/admin-navbar.php';
 
-// Debug mode - set to true to see error messages
 $debug = true;
-
-// Initialize messages
 $success = '';
 $error = '';
 
-// Check if user is logged in and is admin
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
     header("Location: ../login.php");
     exit();
@@ -18,127 +14,110 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
 
 $admin_office = $_SESSION['user']['sub_office'];
 
-// Process form submission
+// 👇 Updated queries to match your actual table and column names
+$departments_result = $conn->query("SELECT department_id AS id, department_name AS name FROM wp_departments");
+$designations_result = $conn->query("SELECT designation_id AS id, designation_name AS name FROM wp_designations");
+
+$departments = [];
+$designations = [];
+
+if ($departments_result && $designations_result) {
+    $departments = $departments_result->fetch_all(MYSQLI_ASSOC);
+    $designations = $designations_result->fetch_all(MYSQLI_ASSOC);
+} else {
+    if ($debug) {
+        echo "<pre>Departments Query Error: " . $conn->error . "</pre>";
+        echo "<pre>Designations Query Error: " . $conn->error . "</pre>";
+    }
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     try {
-        // Get form data with validation
         $first_name = trim($_POST['first_name']);
         $last_name = trim($_POST['last_name']);
-        $gender = isset($_POST['gender']) ? $_POST['gender'] : '';
+        $gender = $_POST['gender'] ?? '';
         $nic = trim($_POST['nic']);
         $service_number = trim($_POST['service_number']);
-        $birthdate = isset($_POST['birthdate']) ? $_POST['birthdate'] : null;
         $address = trim($_POST['address']);
         $email = trim($_POST['email']);
         $phone = trim($_POST['phone_number']);
-        $department = trim($_POST['department']);
-        $head_of_department = trim($_POST['head_of_department']);
-        $designation = isset($_POST['designation']) ? $_POST['designation'] : '';
-        $date_of_joining = isset($_POST['date_of_joining']) ? $_POST['date_of_joining'] : null;
+        $department_id = (int)$_POST['department_id'];
+        $designation_id = (int)$_POST['designation_id'];
+        $custom_designation = trim($_POST['custom_designation'] ?? '');
+        $date_of_joining = $_POST['date_of_joining'] ?? null;
+
         $casual_leave = isset($_POST['casual_leave_balance']) ? (int)$_POST['casual_leave_balance'] : 21;
         $sick_leave = isset($_POST['sick_leave_balance']) ? (int)$_POST['sick_leave_balance'] : 24;
         $leave_balance = $casual_leave + $sick_leave;
-        
-        // Generate username (using email username part or first initial + last name)
-        $username = strtolower(explode('@', $email)[0]);
-        if (empty($username)) {
-            $username = strtolower(substr($first_name, 0, 1) . $last_name);
-        }
-        $username = preg_replace('/[^a-z0-9]/', '', $username); // Remove special chars
-        
-        // Set default user role as Employee
-        $user_role = 'Employee';
 
-        // Form validation - only validate essential fields
         if (empty($first_name) || empty($last_name) || empty($email) || empty($_POST['password'])) {
-            throw new Exception("First name, last name, email, and password are required fields.");
+            throw new Exception("First name, last name, email, and password are required.");
         }
 
-        // Create password hash
-        $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        $username = strtolower(explode('@', $email)[0]) ?: strtolower(substr($first_name, 0, 1) . $last_name);
+        $username = preg_replace('/[^a-z0-9]/', '', $username);
 
-        // Check if email already exists
-        $check_email = "SELECT ID FROM wp_pradeshiya_sabha_users WHERE email = ?";
-        $stmt_check = $conn->prepare($check_email);
-        if (!$stmt_check) {
-            throw new Exception("Database error: " . $conn->error);
-        }
-        
+        $stmt_check = $conn->prepare("SELECT ID FROM wp_pradeshiya_sabha_users WHERE email = ?");
         $stmt_check->bind_param("s", $email);
         $stmt_check->execute();
-        $result = $stmt_check->get_result();
-        
-        if ($result->num_rows > 0) {
-            throw new Exception("Email address already exists in the system!");
+        if ($stmt_check->get_result()->num_rows > 0) {
+            throw new Exception("Email already exists.");
         }
         $stmt_check->close();
-        
-        // Check if username already exists
-        $check_username = "SELECT ID FROM wp_pradeshiya_sabha_users WHERE username = ?";
-        $stmt_username = $conn->prepare($check_username);
-        if (!$stmt_username) {
-            throw new Exception("Database error: " . $conn->error);
-        }
-        
+
+        $stmt_username = $conn->prepare("SELECT ID FROM wp_pradeshiya_sabha_users WHERE username = ?");
         $stmt_username->bind_param("s", $username);
         $stmt_username->execute();
-        $result_username = $stmt_username->get_result();
-        
-        if ($result_username->num_rows > 0) {
-            // Username exists, append a number
-            $username = $username . rand(100, 999);
+        if ($stmt_username->get_result()->num_rows > 0) {
+            $username .= rand(100, 999);
         }
         $stmt_username->close();
 
-        // Insert user into database
-$sql = "INSERT INTO wp_pradeshiya_sabha_users (
-    username, password, first_name, last_name, gender, email, birthdate, 
-    address, NIC, service_number, phone_number, designation, department, head_of_department, 
-    sub_office, date_of_joining, user_role, leave_balance, 
-    casual_leave_balance, sick_leave_balance
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $password_hash = password_hash($_POST['password'], PASSWORD_DEFAULT);
+
+        $sql = "INSERT INTO wp_pradeshiya_sabha_users (
+    username, password, first_name, last_name, gender, email, address,
+    NIC, service_number, phone_number, designation_id, department_id,
+    designation, sub_office, date_of_joining, 
+    leave_balance, casual_leave_balance, sick_leave_balance
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
+
         if (!$stmt) {
-            throw new Exception("Database error: " . $conn->error);
+            throw new Exception("Prepare failed: " . $conn->error);
         }
 
         $stmt->bind_param(
-    "sssssssssssssssssiiii",
-    $username,
-    $password,
-    $first_name,
-    $last_name,
-    $gender,
-    $email,
-    $birthdate,
-    $address,
-    $nic,
-    $service_number,
-    $phone,
-    $designation,
-    $department,
-    $head_of_department,
-    $admin_office,
-    $date_of_joining,
-    $user_role,
-    $leave_balance,
-    $casual_leave,
-    $sick_leave,
+            "sssssssssiissssiii",
+            $username,
+            $password_hash,
+            $first_name,
+            $last_name,
+            $gender,
+            $email,
+            $address,
+            $nic,
+            $service_number,
+            $phone,
+            $designation_id,
+            $department_id,
+            $custom_designation,  // stored in 'designation' column
+            $admin_office,
+            $date_of_joining,
+            $leave_balance,
+            $casual_leave,
+            $sick_leave
+        );
 
-);
 
         if (!$stmt->execute()) {
-            throw new Exception("Error adding user: " . $stmt->error);
+            throw new Exception("Insert failed: " . $stmt->error);
         }
 
-        $success = "User added successfully! Username: " . $username;
-        
-        // Clear form data on success
-        $_POST = array();
-        
+        $success = "User added successfully! Username: $username";
+        $_POST = [];
         $stmt->close();
-        
     } catch (Exception $e) {
         $error = $e->getMessage();
         if ($debug) {
@@ -147,6 +126,7 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -223,19 +203,14 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
                             <input type="text" name="nic" value="<?php echo isset($_POST['nic']) ? htmlspecialchars($_POST['nic']) : ''; ?>"
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                         </div>
-                        
-                      
+
+
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-1">Service Number</label>
                             <input type="text" name="service_number" value="<?php echo isset($_POST['service_number']) ? htmlspecialchars($_POST['service_number']) : ''; ?>"
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                         </div>
 
-                        <div>
-                            <label class="block text-gray-700 text-sm font-medium mb-1">Date of Birth</label>
-                            <input type="date" name="birthdate" value="<?php echo isset($_POST['birthdate']) ? $_POST['birthdate'] : ''; ?>"
-                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                        </div>
 
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-1">Address</label>
@@ -264,21 +239,41 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
 
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-1">Department</label>
-                            <input type="text" name="department" value="<?php echo isset($_POST['department']) ? htmlspecialchars($_POST['department']) : ''; ?>"
-                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                            <select name="department_id" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                                <option value="">Select Department</option>
+                                <?php foreach ($departments as $department): ?>
+                                    <option value="<?php echo $department['id']; ?>"
+                                        <?php echo (isset($_POST['department_id']) && $_POST['department_id'] == $department['id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($department['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
 
-                        <div>
-                            <label class="block text-gray-700 text-sm font-medium mb-1">Head of Department</label>
-                            <input type="text" name="head_of_department" value="<?php echo isset($_POST['head_of_department']) ? htmlspecialchars($_POST['head_of_department']) : ''; ?>"
-                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                        </div>
 
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-1">Designation</label>
-                            <input type="text" name="designation" value="<?php echo isset($_POST['designation']) ? htmlspecialchars($_POST['designation']) : ''; ?>"
+                            <select name="designation_id" id="designation" onchange="toggleCustomDesignation()"
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                <option value="">Select Designation</option>
+                                <?php foreach ($designations as $designation): ?>
+                                    <option value="<?php echo $designation['id']; ?>"
+                                        data-name="<?php echo htmlspecialchars($designation['name']); ?>"
+                                        <?php echo (isset($_POST['designation_id']) && $_POST['designation_id'] == $designation['id']) ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($designation['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+
+                        <div id="customDesignationContainer" style="display: none;">
+                            <label class="block text-gray-700 text-sm font-medium mb-1">Custom Designation (for Employee)</label>
+                            <input type="text" name="custom_designation" id="custom_designation"
+                                value="<?php echo isset($_POST['custom_designation']) ? htmlspecialchars($_POST['custom_designation']) : ''; ?>"
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                         </div>
+
 
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-1">Date of Joining</label>
@@ -343,28 +338,46 @@ $sql = "INSERT INTO wp_pradeshiya_sabha_users (
     </div>
 
     <script>
-    // Auto-calculate total leave balance
-    document.addEventListener('DOMContentLoaded', function() {
-        const casualLeave = document.querySelector('input[name="casual_leave_balance"]');
-        const sickLeave = document.querySelector('input[name="sick_leave_balance"]');
-        const totalLeave = document.getElementById('total_leave');
-        
-        function calculateTotal() {
-            const casual = parseInt(casualLeave.value) || 0;
-            const sick = parseInt(sickLeave.value) || 0;
-            
-            totalLeave.value = casual + sick ;
-        }
-        
-        // Initial calculation
-        calculateTotal();
-        
-        // Add event listeners to recalculate on change
-        casualLeave.addEventListener('input', calculateTotal);
-        sickLeave.addEventListener('input', calculateTotal);
-        
-    });
+        // Auto-calculate total leave balance
+        document.addEventListener('DOMContentLoaded', function() {
+            const casualLeave = document.querySelector('input[name="casual_leave_balance"]');
+            const sickLeave = document.querySelector('input[name="sick_leave_balance"]');
+            const totalLeave = document.getElementById('total_leave');
+
+            function calculateTotal() {
+                const casual = parseInt(casualLeave.value) || 0;
+                const sick = parseInt(sickLeave.value) || 0;
+
+                totalLeave.value = casual + sick;
+            }
+
+            // Initial calculation
+            calculateTotal();
+
+            // Add event listeners to recalculate on change
+            casualLeave.addEventListener('input', calculateTotal);
+            sickLeave.addEventListener('input', calculateTotal);
+
+        });
     </script>
+
+    <script>
+        function toggleCustomDesignation() {
+            const select = document.getElementById("designation");
+            const selectedOption = select.options[select.selectedIndex];
+            const customDesignationContainer = document.getElementById("customDesignationContainer");
+            if (selectedOption.dataset.name === "Employee") {
+                customDesignationContainer.style.display = "block";
+            } else {
+                customDesignationContainer.style.display = "none";
+            }
+        }
+
+        // Call on load to reflect previous selection
+        document.addEventListener("DOMContentLoaded", toggleCustomDesignation);
+    </script>
+
+
     <?php require '../includes/admin-footer.php'; ?>
 </body>
 

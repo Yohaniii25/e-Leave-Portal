@@ -11,15 +11,22 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
 // Get logged-in admin's sub_office
 $admin_office = $_SESSION['user']['sub_office'];
 
-// Modify SQL query to filter users by sub_office
-$sql = "SELECT ID, CONCAT(first_name, ' ', last_name) AS name, phone_number, department, email 
-        FROM wp_pradeshiya_sabha_users 
-        WHERE sub_office = ?";
+// Modify SQL query to filter users by sub_office and join department name
+$sql = "SELECT u.ID, CONCAT(u.first_name, ' ', u.last_name) AS name, u.phone_number, d.department_name AS department, u.email 
+        FROM wp_pradeshiya_sabha_users u
+        LEFT JOIN wp_departments d ON u.department_id = d.department_id
+        WHERE u.sub_office = ?";
 
 $stmt = $conn->prepare($sql);
+
+if (!$stmt) {
+    die("Prepare failed: " . $conn->error);
+}
+
 $stmt->bind_param("s", $admin_office);
 $stmt->execute();
 $result = $stmt->get_result();
+
 
 ?>
 

@@ -51,6 +51,7 @@ require '../includes/admin-navbar.php';
             </div>
         </div>
     </div>
+    <br>
 <?php require '../includes/admin-footer.php'; ?>
 </body>
 </html>

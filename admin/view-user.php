@@ -13,7 +13,11 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 }
 $user_id = intval($_GET['id']);
 
-$sql = "SELECT * FROM wp_pradeshiya_sabha_users WHERE ID = ? AND sub_office = ?";
+$sql = "SELECT u.*, d.department_name 
+        FROM wp_pradeshiya_sabha_users u
+        LEFT JOIN wp_departments d ON u.department_id = d.department_id
+        WHERE u.ID = ? AND u.sub_office = ?";
+
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("is", $user_id, $admin_office);
 $stmt->execute();
@@ -120,7 +124,7 @@ $user = $result->fetch_assoc();
                             <div class="flex items-center">
                                 <i class="fas fa-building text-indigo-500 mr-3 w-8 text-center"></i>
                                 <p class="text-gray-700">
-                                    <strong>Department:</strong> <?php echo htmlspecialchars($user['department']); ?>
+                                    <strong>Department:</strong> <?php echo htmlspecialchars($user['department_name']); ?>
                                 </p>
                             </div>
                         </div>
@@ -155,14 +159,7 @@ $user = $result->fetch_assoc();
                             </div>
                         </div>
 
-                        <div class="detail-item" style="animation-delay: 0.9s">
-                            <div class="flex items-center">
-                                <i class="fas fa-birthday-cake text-pink-500 mr-3 w-8 text-center"></i>
-                                <p class="text-gray-700">
-                                    <strong>Date Of Birth:</strong> <?php echo htmlspecialchars($user['birthdate']); ?>
-                                </p>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>
