@@ -4,19 +4,20 @@ session_start();
 require '../includes/dbconfig.php';
 require '../includes/user-navbar.php';
 
-
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Employee') {
-    header("Location: ../login.php");
+// FIX: Use 'designation' instead of 'role'
+if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'Employee') !== 0) {
+    header("Location: ../index.php");
     exit();
 }
 
 $user_id = $_SESSION['user']['id'];
 $sub_office = $_SESSION['user']['sub_office'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
-$department = $_SESSION['user']['department'] ?? '';
+$department = $_SESSION['user']['department'] ?? '';  // only if you're setting this elsewhere
 
 $leave_balance = 0;
 
+// Get leave balance
 $sql = "SELECT leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?";
 $stmt = $conn->prepare($sql);
 if ($stmt) {
@@ -29,6 +30,7 @@ if ($stmt) {
     $stmt->close();
 }
 
+// Get leave history
 $sql = "SELECT leave_type, leave_start_date, leave_end_date, number_of_days, status, created_at 
         FROM wp_leave_request WHERE user_id = ? ORDER BY created_at DESC";
 $stmt = $conn->prepare($sql);
@@ -43,6 +45,7 @@ if ($stmt) {
     $stmt->close();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">

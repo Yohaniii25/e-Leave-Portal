@@ -1,12 +1,37 @@
 <?php
 session_start();
+require '../includes/dbconfig.php';
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
-    header("Location: ../login.php");
+if (!isset($_SESSION['user'])) {
+    header("Location: ../index.php");
     exit();
 }
 
-require '../includes/admin-navbar.php'; 
+// Fetch designation fresh from DB based on email or user ID from session
+$email = $_SESSION['user']['email'];
+
+$query = "SELECT d.designation_name FROM wp_pradeshiya_sabha_users u
+          LEFT JOIN wp_designations d ON u.designation_id = d.designation_id
+          WHERE u.email = ?";
+
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $row = $result->fetch_assoc()) {
+    if (strcasecmp(trim($row['designation_name']), 'Admin') !== 0) {
+        header("Location: ../index.php");
+        exit();
+    }
+} else {
+    // User not found or no designation, redirect
+    header("Location: ../index.php");
+    exit();
+}
+
+require '../includes/admin-navbar.php';
+
 ?>
 
 <!DOCTYPE html>
