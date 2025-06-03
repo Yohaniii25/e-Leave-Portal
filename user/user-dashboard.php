@@ -4,7 +4,7 @@ session_start();
 require '../includes/dbconfig.php';
 require '../includes/user-navbar.php';
 
-// FIX: Use 'designation' instead of 'role'
+
 if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'Employee') !== 0) {
     header("Location: ../index.php");
     exit();
@@ -13,8 +13,7 @@ if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'E
 $user_id = $_SESSION['user']['id'];
 $sub_office = $_SESSION['user']['sub_office'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
-$department = $_SESSION['user']['department'] ?? '';  // only if you're setting this elsewhere
-
+$department = $_SESSION['user']['department'] ?? '';  
 $leave_balance = 0;
 
 // Get leave balance

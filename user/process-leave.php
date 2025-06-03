@@ -7,15 +7,15 @@ use PHPMailer\PHPMailer\Exception;
 
 require '../vendor/autoload.php';
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Employee') {
-    header("Location: ../login.php");
+if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'Employee') !== 0) {
+    header("Location: ../index.php");
     exit();
 }
 
 $user_id = $_SESSION['user']['id'];
 $sub_office = $_SESSION['user']['sub_office'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
-$department = $_SESSION['user']['department'] ?? '';
+$department = $_SESSION['user']['department'] ?? '';  
 
 
 $balanceQuery = $conn->prepare("SELECT casual_leave_balance, sick_leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?");

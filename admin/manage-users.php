@@ -1,24 +1,51 @@
 <?php
 session_start();
 require '../includes/dbconfig.php';
-require '../includes/admin-navbar.php';
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
-    header("Location: ../login.php");
+if (!isset($_SESSION['user'])) {
+    header("Location: ../index.php");
     exit();
 }
 
-// Get logged-in admin's sub_office
-$admin_office = $_SESSION['user']['sub_office'];
+$email = $_SESSION['user']['email'];
 
-// Modify SQL query to filter users by sub_office and join department name
-$sql = "SELECT u.ID, CONCAT(u.first_name, ' ', u.last_name) AS name, u.phone_number, d.department_name AS department, u.email 
+$query = "SELECT d.designation_name, u.sub_office 
+          FROM wp_pradeshiya_sabha_users u
+          LEFT JOIN wp_designations d ON u.designation_id = d.designation_id
+          WHERE u.email = ?";
+
+$stmt = $conn->prepare($query);
+if (!$stmt) {
+    die("Prepare failed: " . $conn->error);
+}
+
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if (!$result) {
+    die("Query failed: " . $conn->error);
+}
+
+$row = $result->fetch_assoc();
+if (!$row || strcasecmp(trim($row['designation_name']), 'Admin') !== 0) {
+    header("Location: ../index.php");
+    exit();
+}
+
+
+$admin_office = $row['sub_office'];
+
+require '../includes/admin-navbar.php';
+
+// Fetch users within admin's sub-office
+$sql = "SELECT u.ID, CONCAT(u.first_name, ' ', u.last_name) AS name, u.phone_number, 
+               dpt.department_name AS department, u.email 
         FROM wp_pradeshiya_sabha_users u
-        LEFT JOIN wp_departments d ON u.department_id = d.department_id
+        LEFT JOIN wp_departments dpt ON u.department_id = dpt.department_id
         WHERE u.sub_office = ?";
 
 $stmt = $conn->prepare($sql);
-
 if (!$stmt) {
     die("Prepare failed: " . $conn->error);
 }
@@ -26,6 +53,7 @@ if (!$stmt) {
 $stmt->bind_param("s", $admin_office);
 $stmt->execute();
 $result = $stmt->get_result();
+
 
 
 ?>
