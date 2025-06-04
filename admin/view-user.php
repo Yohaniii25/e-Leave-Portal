@@ -2,13 +2,36 @@
 session_start();
 require '../includes/dbconfig.php';
 require '../includes/admin-navbar.php';
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
-    header("Location: ../login.php");
+
+if (!isset($_SESSION['user']) || empty($_SESSION['user']['email'])) {
+    header("Location: ../index.php");
     exit();
 }
-$admin_office = $_SESSION['user']['sub_office'];
 
-if (!isset($_GET['id']) || empty($_GET['id'])) {
+$email = $_SESSION['user']['email'];
+$admin_office = $_SESSION['user']['sub_office'] ?? '';  // Ensure sub_office is set
+
+$query = "SELECT d.designation_name 
+          FROM wp_pradeshiya_sabha_users u
+          LEFT JOIN wp_designations d ON u.designation_id = d.designation_id
+          WHERE u.email = ?";
+
+$stmt = $conn->prepare($query);
+if (!$stmt) {
+    die("Prepare failed: " . $conn->error);
+}
+
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$row = $result->fetch_assoc();
+if (!$row || strcasecmp(trim($row['designation_name']), 'Admin') !== 0) {
+    header("Location: ../index.php");
+    exit();
+}
+
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     die("Invalid user ID.");
 }
 $user_id = intval($_GET['id']);
@@ -19,14 +42,21 @@ $sql = "SELECT u.*, d.department_name
         WHERE u.ID = ? AND u.sub_office = ?";
 
 $stmt = $conn->prepare($sql);
+if (!$stmt) {
+    die("Prepare failed: " . $conn->error);
+}
+
 $stmt->bind_param("is", $user_id, $admin_office);
 $stmt->execute();
 $result = $stmt->get_result();
+
 if ($result->num_rows === 0) {
     die("User not found or you do not have permission to view this user.");
 }
+
 $user = $result->fetch_assoc();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 

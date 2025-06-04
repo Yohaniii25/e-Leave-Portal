@@ -3,21 +3,42 @@ session_start();
 require '../includes/dbconfig.php';
 require '../includes/admin-navbar.php';
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
-    header("Location: ../login.php");
+
+if (!isset($_SESSION['user'])) {
+    header("Location: ../index.php");
     exit();
 }
 
-$admin_office = $_SESSION['user']['sub_office'];
+$email = $_SESSION['user']['email'];
 
-// Check if ID is provided
+$query = "SELECT d.designation_name, u.sub_office 
+          FROM wp_pradeshiya_sabha_users u
+          LEFT JOIN wp_designations d ON u.designation_id = d.designation_id
+          WHERE u.email = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $row = $result->fetch_assoc()) {
+    if (strcasecmp(trim($row['designation_name']), 'Admin') !== 0) {
+        header("Location: ../index.php");
+        exit();
+    }
+    $admin_office = $row['sub_office'];
+} else {
+    header("Location: ../index.php");
+    exit();
+}
+
+// GET USER ID TO EDIT
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("Invalid user ID.");
 }
 
 $user_id = intval($_GET['id']);
 
-// Fetch user details
+// FETCH USER DATA
 $sql = "SELECT * FROM wp_pradeshiya_sabha_users WHERE ID = ? AND sub_office = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("is", $user_id, $admin_office);
@@ -30,47 +51,27 @@ if ($result->num_rows === 0) {
 
 $user = $result->fetch_assoc();
 
-// Fetch departments for dropdown with error handling
+// FETCH DEPARTMENTS
 $departments = [];
 $dept_sql = "SELECT department_id as id, department_name as name FROM wp_departments ORDER BY department_name ASC";
 $dept_result = $conn->query($dept_sql);
-
-if ($dept_result === false) {
-    // Log the error for debugging
-    error_log("Department query failed: " . $conn->error);
-    echo "<!-- Department query error: " . htmlspecialchars($conn->error) . " -->";
-} else {
+if ($dept_result) {
     while ($row = $dept_result->fetch_assoc()) {
         $departments[] = $row;
     }
 }
 
-// Debug: Check if departments are fetched
-if (empty($departments)) {
-    echo "<!-- Warning: No departments found. Check if 'wp_departments' table exists and has data -->";
-}
-
-// Fetch designations for dropdown with error handling
+// FETCH DESIGNATIONS
 $designations = [];
 $desig_sql = "SELECT designation_id as id, designation_name as name FROM wp_designations ORDER BY designation_name ASC";
 $desig_result = $conn->query($desig_sql);
-
-if ($desig_result === false) {
-    // Log the error for debugging
-    error_log("Designation query failed: " . $conn->error);
-    echo "<!-- Designation query error: " . htmlspecialchars($conn->error) . " -->";
-} else {
+if ($desig_result) {
     while ($row = $desig_result->fetch_assoc()) {
         $designations[] = $row;
     }
 }
 
-// Debug: Check if designations are fetched
-if (empty($designations)) {
-    echo "<!-- Warning: No designations found. Check if 'wp_designations' table exists and has data -->";
-}
-
-// Handle form submission
+// HANDLE FORM SUBMISSION
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $first_name = trim($_POST['first_name']);
     $last_name = trim($_POST['last_name']);
@@ -79,17 +80,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $address = trim($_POST['address']);
     $email = trim($_POST['email']);
     $phone = trim($_POST['phone_number']);
-    $department = intval($_POST['department']); // department id
-    $designation = $_POST['designation']; // could be 'custom' or designation id
+    $department = intval($_POST['department']);
+    $designation = $_POST['designation'];
     $custom_designation = trim($_POST['custom_designation'] ?? '');
     $date_of_joining = $_POST['date_of_joining'];
     $password = !empty($_POST['password']) ? password_hash($_POST['password'], PASSWORD_DEFAULT) : null;
 
-    // Determine final designation value
+    // Determine final designation name
     if ($designation === 'custom' && !empty($custom_designation)) {
         $designation_final = $custom_designation;
     } else {
-        // Find designation name from id
         $designation_final = '';
         foreach ($designations as $desig) {
             if ($desig['id'] == $designation) {
@@ -99,10 +99,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    if (empty($first_name) || empty($last_name) || empty($email) || empty($nic) || empty($address) || empty($designation_final) || empty($department)) {
-        $error = "All required fields must be filled!";
+    if (empty($first_name) || empty($last_name) || empty($email) || empty($nic) || empty($designation_final) || empty($date_of_joining)) {
+        $error = "Please fill in all required fields: First Name, Last Name, NIC, Email, Designation, and Date of Joining.";
     } else {
-        // Base SQL query - using department_id instead of department
+        // Build SQL
         $sql = "UPDATE wp_pradeshiya_sabha_users SET 
                 first_name = ?, 
                 last_name = ?, 
@@ -111,23 +111,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 address = ?, 
                 email = ?, 
                 phone_number = ?, 
-                department_id = ?, 
                 designation = ?, 
                 date_of_joining = ?";
 
-        // If password is provided, append it to the SQL query
         if ($password) {
             $sql .= ", password = ?";
         }
 
         $sql .= " WHERE ID = ? AND sub_office = ?";
 
-        // Prepare statement
+        // Prepare and bind
         $stmt = $conn->prepare($sql);
 
         if ($password) {
+            $stmt = $conn->prepare("UPDATE wp_pradeshiya_sabha_users SET 
+        first_name = ?, 
+        last_name = ?, 
+        gender = ?, 
+        NIC = ?, 
+        address = ?, 
+        email = ?, 
+        phone_number = ?, 
+        designation = ?, 
+        date_of_joining = ?, 
+        password = ?
+        WHERE ID = ? AND sub_office = ?");
+
             $stmt->bind_param(
-                "sssssssississ",
+                "ssssssssssis",  // corrected types and order
                 $first_name,
                 $last_name,
                 $gender,
@@ -135,7 +146,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $address,
                 $email,
                 $phone,
-                $department,
                 $designation_final,
                 $date_of_joining,
                 $password,
@@ -143,8 +153,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $admin_office
             );
         } else {
+            $stmt = $conn->prepare("UPDATE wp_pradeshiya_sabha_users SET 
+        first_name = ?, 
+        last_name = ?, 
+        gender = ?, 
+        NIC = ?, 
+        address = ?, 
+        email = ?, 
+        phone_number = ?, 
+        designation = ?, 
+        date_of_joining = ?
+        WHERE ID = ? AND sub_office = ?");
+
             $stmt->bind_param(
-                "sssssssississ",
+                "ssssssssiss",  // corrected type string (11 params)
                 $first_name,
                 $last_name,
                 $gender,
@@ -152,7 +174,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $address,
                 $email,
                 $phone,
-                $department,
                 $designation_final,
                 $date_of_joining,
                 $user_id,
@@ -160,10 +181,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             );
         }
 
+
         if ($stmt->execute()) {
             $success = "User updated successfully!";
-
-            // Refresh user data after update
             $stmt = $conn->prepare("SELECT * FROM wp_pradeshiya_sabha_users WHERE ID = ?");
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
@@ -175,6 +195,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -273,8 +294,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-medium mb-1">Department <span class="text-red-500">*</span></label>
-                            <select name="department" id="department" required
+                            <label class="block text-gray-700 text-sm font-medium mb-1">Department</label>
+                            <select name="department" id="department"
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                                 <option value="">-- Select Department --</option>
                                 <?php if (!empty($departments)): ?>

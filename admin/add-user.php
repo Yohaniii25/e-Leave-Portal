@@ -7,12 +7,33 @@ $debug = true;
 $success = '';
 $error = '';
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Admin') {
-    header("Location: ../login.php");
+if (!isset($_SESSION['user'])) {
+    header("Location: ../index.php");
     exit();
 }
 
-$admin_office = $_SESSION['user']['sub_office'];
+$email = $_SESSION['user']['email'];
+
+$query = "SELECT d.designation_name, u.sub_office 
+          FROM wp_pradeshiya_sabha_users u
+          LEFT JOIN wp_designations d ON u.designation_id = d.designation_id
+          WHERE u.email = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $row = $result->fetch_assoc()) {
+    if (strcasecmp(trim($row['designation_name']), 'Admin') !== 0) {
+        header("Location: ../index.php");
+        exit();
+    }
+    $admin_office = $row['sub_office'];
+} else {
+    header("Location: ../index.php");
+    exit();
+}
+
 
 // 👇 Updated queries to match your actual table and column names
 $departments_result = $conn->query("SELECT department_id AS id, department_name AS name FROM wp_departments");
@@ -239,7 +260,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                         <div>
                             <label class="block text-gray-700 text-sm font-medium mb-1">Department</label>
-                            <select name="department_id" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required>
+                            <select name="department_id" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                                 <option value="">Select Department</option>
                                 <?php foreach ($departments as $department): ?>
                                     <option value="<?php echo $department['id']; ?>"
