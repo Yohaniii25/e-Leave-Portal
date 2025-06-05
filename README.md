@@ -1,96 +1,43 @@
-Sure! Below is a basic `README.md` template for your **Leave Management System** project. You can customize this further as needed.
+# Leave Approval System
 
-```markdown
-# Leave Management System
+A comprehensive **multi-step leave management and approval system** built with PHP and MySQL.  
+Designed for organisations to streamline leave requests, approvals, and tracking across multiple roles and departments.
 
-A web-based Leave Management System to manage employee leave requests, approvals, and user roles (Admin/Employee). This system allows the admin to manage employees, approve/reject leave requests, and track leave records.
+---
 
-## Features
+## What This System Can Do
 
-### Admin Panel:
-- Dashboard to view and manage all employee leave requests.
-- Ability to approve or reject leave requests.
-- Admin can add/edit employee records.
-- Admin can view employee leave reports and analytics.
-- Admin can manage system settings.
+- Employees can submit leave requests with details such as leave type, start/end dates, and reason.
+- Multi-level approval workflow:
+  - **Step 1:** Section Head reviews and approves or rejects leave requests from their department.
+  - **Step 2:** Either the Head of Public Service (Head of PS) or the Authorized Officer reviews leave requests approved by the Section Head. Only one of them needs to approve or reject.
+  - **Step 3:** Leave Officer gives the final approval after previous approvals.
+- Track leave status at each step (pending, approved, rejected).
+- Manage leave balances for different leave types (casual, sick, annual).
+- Admin dashboard to manage users, departments, designations, and manual leave adjustments.
+- Role-based access and views for Employees, Section Heads, Authorized Officers, Head of PS, Leave Officers, and Admins.
+- Detailed leave reports per user, department, and approval status.
+- Responsive UI with Tailwind CSS for clean and modern look.
 
-### Employee Panel:
-- Dashboard to view leave balance and history.
-- Request leave and check leave status.
-- View approved and rejected leave requests.
+---
 
-### User Management:
-- Login with email and sub-office selection.
-- Role-based access (Admin or Employee).
-- Admin can view all users, while employees can only manage their own leave requests.
+## User Roles
+
+| Role                 | Capabilities                                         |
+| -------------------- | --------------------------------------------------- |
+| **Employee**         | Submit leave requests, view leave status and balances. |
+| **Section Head**     | Approve/reject leave requests from their department (Step 1). |
+| **Authorized Officer** | Review and approve/reject leave requests approved by Section Head (Step 2). |
+| **Head of Public Service (Head of PS)** | Also review and approve/reject leaves at Step 2 (alternative to Authorized Officer). |
+| **Leave Officer**    | Final approval and leave record maintenance (Step 3). |
+| **Admin**            | Manage users, departments, designations, and system settings. |
+
+---
 
 ## Installation
 
-### Prerequisites:
-- PHP >= 7.3
-- MySQL or MariaDB
-- Apache or Nginx server
+1. **Clone the repository**
 
-### Steps to Set Up:
-1. Clone the repository or download the project.
-2. Import the database schema using the `wp_leave_requests.sql` file.
-3. Configure the `dbconfig.php` file in the `includes` folder with your MySQL credentials.
-4. Set up a local server (e.g., XAMPP or WAMP for local development).
-5. Open the project in your browser (e.g., `localhost/e-Leave-Portal`).
-
-### Database Configuration:
-Make sure to configure the database connection in the `includes/dbconfig.php` file:
-```php
-$servername = "localhost"; // Database server
-$username = "root";        // Database username
-$password = "";            // Database password (empty for localhost)
-$dbname = "wp_leave_requests"; // Database name
-```
-
-## Usage
-
-1. **Login**:  
-   - Admin and Employees can log in using their credentials. Admins must provide their email and the sub-office they belong to.
-   - Once logged in, the user will be redirected to their respective dashboard (Admin or Employee).
-
-2. **Admin Dashboard**:
-   - View employee leave requests.
-   - Approve or reject leave requests.
-   - Add/edit employee records.
-
-3. **Employee Dashboard**:
-   - View leave balance.
-   - Submit leave requests.
-   - View leave request status.
-
-4. **Logout**:  
-   - Click on the logout button to end your session.
-
-## Technology Stack
-
-- **Frontend**: HTML, CSS (Tailwind CSS for styling), JavaScript (AJAX for dynamic actions)
-- **Backend**: PHP (MySQLi for database interaction)
-- **Database**: MySQL
-- **Authentication**: Session-based login
-
-## Contributing
-
-We welcome contributions! If you have any bug fixes, new features, or improvements, feel free to fork this repository, make your changes, and submit a pull request.
-
-## License
-
-This project is open-source and available under the [MIT License](LICENSE).
-
----
-
-### Notes:
-
-- The admin user credentials are pre-set in the database with the following details:
-  - **Username**: admin
-  - **Password**: admin123 (hashed in the database)
-  - **Role**: Admin
-  - **Sub-Office**: Head Office
-
-- Employee users must register via the admin panel (not through self-registration).
-
----
+```bash
+git clone https://github.com/yourusername/leave-approval-system.git
+cd leave-approval-system
