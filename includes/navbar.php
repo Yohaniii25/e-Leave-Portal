@@ -10,7 +10,7 @@ if (!isset($_SESSION['user'])) {
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="text-white text-2xl font-bold">
-                    <a href="./admin-dashboard.php">Pannala Pradeshiya Sabha</a>
+                    <a href="./dashboard.php">Pannala Pradeshiya Sabha</a>
                 </div>
                 <div>
                     <a href="../index.php" class="text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium transition duration-150 ease-in-out">Login</a>
@@ -37,7 +37,7 @@ echo '
         <div class="flex justify-between items-center h-16">
             <!-- Left side - Brand -->
             <div class="text-white text-2xl font-bold">
-                <a href="./admin-dashboard.php">Pannala Pradeshiya Sabha</a>
+                <a href="./dashboard.php">Pannala Pradeshiya Sabha</a>
             </div>
 
             <!-- Center - Navigation Links (Desktop) -->
@@ -56,9 +56,9 @@ elseif ($designation_id == 1) {
     echo nav_link('../admin/approved-leaves.php', 'Approved Leaves');
 }
 // Head office Authorized Officer (designation_id = 5)
-elseif ($designation_id == 5) {
-    echo nav_link('/user/authorized-leaves.php', 'Leaves for Authorization');
-    echo nav_link('/user/reports.php', 'Reports');
+elseif ($designation_id == 5 || $designation_id == 3) {
+    echo nav_link('../admin/head-of-ps-approval.php', 'HOD Approved Leaves');
+    echo nav_link('../admin/reports.php', 'Reports');
 }
 // Sub office Authorized Officer (designation_id = 6)
 elseif ($designation_id == 6) {
@@ -89,7 +89,7 @@ echo '
 
             <!-- Right side - Logout -->
             <div class="hidden md:block">
-                <form method="POST" action="/logout.php" class="mt-0">
+                <form method="POST" action="../logout.php" class="mt-0">
                     <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium w-full transition duration-150 ease-in-out">
                         Logout
                     </button>
@@ -118,9 +118,9 @@ if ($designation_id == 7) {
 } elseif ($designation_id == 1) {
     echo '<a href="/user/hod-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Department Leave Requests</a>';
     echo '<a href="/user/approved-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Approved Leaves</a>';
-} elseif ($designation_id == 5) {
-    echo '<a href="/user/authorized-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Leaves for Authorization</a>';
-    echo '<a href="/user/reports.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Reports</a>';
+} elseif ($designation_id == 5 || $designation_id == 3) {
+    echo '<a href="/admin/hod-approved-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">HOD Approved Leaves</a>';
+    echo '<a href="/admin/reports.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Reports</a>';
 } elseif ($designation_id == 6) {
     echo '<a href="/user/suboffice-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">SubOffice Leave Requests</a>';
 } elseif ($designation_id == 8) {
@@ -137,7 +137,7 @@ if ($designation_id == 7) {
 }
 
 echo '
-            <form method="POST" action="/logout.php" class="mt-4">
+            <form method="POST" action="../logout.php" class="mt-4">
                 <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md w-full transition duration-150 ease-in-out">
                     Logout
                 </button>

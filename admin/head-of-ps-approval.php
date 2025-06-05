@@ -8,7 +8,11 @@ if (!isset($_SESSION['user'])) {
 }
 
 $user = $_SESSION['user'];
+$department_id = $user['department_id'] ?? null;
 
+if (!$department_id) {
+    die("Error: Your department is not set. Contact admin.");
+}
 
 // Handle form submission (approve/reject)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST['action'])) {
@@ -20,18 +24,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
     if (in_array($action, ['approve', 'reject'])) {
         $status = $action === 'approve' ? 'approved' : 'rejected';
 
-        $update_sql = "
-            UPDATE wp_leave_request 
-            SET 
-                step_1_status = ?,
-                step_1_approver_id = ?,
-                step_1_date = NOW(),
-                rejection_remark = ?
-            WHERE request_id = ?
-        ";
+        if ($department_id == 6) {
+            // Head of PS approves/rejects at step 2
+            $update_sql = "
+                UPDATE wp_leave_request 
+                SET 
+                    step_2_status = ?,
+                    step_2_approver_id = ?,
+                    step_2_date = NOW(),
+                    rejection_remark = ?
+                WHERE request_id = ?
+            ";
+        } else {
+            // HOD approves/rejects at step 1
+            $update_sql = "
+                UPDATE wp_leave_request 
+                SET 
+                    step_1_status = ?,
+                    step_1_approver_id = ?,
+                    step_1_date = NOW(),
+                    rejection_remark = ?
+                WHERE request_id = ?
+            ";
+        }
 
         $stmt = $conn->prepare($update_sql);
         if ($stmt) {
+            // Only store rejection remark if rejected
             $remark_safe = $status === 'rejected' ? $remark : null;
             $stmt->bind_param("sisi", $status, $approver_id, $remark_safe, $request_id);
 
@@ -48,21 +67,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
     }
 }
 
-// Fetch leave requests
-$sql = "
-    SELECT lr.*, u.first_name, u.last_name, u.email, d.department_name
-    FROM wp_leave_request lr
-    JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
-    LEFT JOIN wp_departments d ON u.department_id = d.department_id
-    WHERE u.department_id = ? AND lr.step_1_status = 'pending'
-    ORDER BY lr.leave_start_date DESC
-";
-
-$stmt = $conn->prepare($sql);
-if (!$stmt) {
-    die("Prepare failed: " . $conn->error);
+// Fetch leave requests based on user role
+if ($department_id == 6) {
+    // Head of PS — show leaves approved by HOD but pending for Head of PS approval
+    $sql = "
+        SELECT lr.*, u.first_name, u.last_name, u.email, d.department_name
+        FROM wp_leave_request lr
+        JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
+        LEFT JOIN wp_departments d ON u.department_id = d.department_id
+        WHERE lr.step_1_status = 'approved' AND lr.step_2_status = 'pending'
+        ORDER BY lr.leave_start_date DESC
+    ";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        die("Prepare failed: " . $conn->error);
+    }
+} else {
+    // Other departments — show pending leaves filtered by department at step 1
+    $sql = "
+        SELECT lr.*, u.first_name, u.last_name, u.email, d.department_name
+        FROM wp_leave_request lr
+        JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
+        LEFT JOIN wp_departments d ON u.department_id = d.department_id
+        WHERE u.department_id = ? AND lr.step_1_status = 'pending'
+        ORDER BY lr.leave_start_date DESC
+    ";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        die("Prepare failed: " . $conn->error);
+    }
+    $stmt->bind_param("i", $department_id);
 }
-$stmt->bind_param("i", $department_id);
+
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -82,8 +118,12 @@ $result = $stmt->get_result();
 
     <div class="max-w-7xl mx-auto p-6">
         <h1 class="text-3xl font-semibold mb-6 text-gray-800">
-            Leave Requests for Department:
-            <span class="text-blue-600"><?= htmlspecialchars($user['department_id']) ?></span>
+            Leave Requests
+            <?php if ($department_id == 6): ?>
+                <span class="text-blue-600">(Head of PS - Approve leaves approved by HOD)</span>
+            <?php else: ?>
+                <span class="text-blue-600">for Department: <?= htmlspecialchars($user['department_id']) ?></span>
+            <?php endif; ?>
         </h1>
 
         <?php if (isset($_GET['status']) && $_GET['status'] === 'success'): ?>
@@ -99,6 +139,7 @@ $result = $stmt->get_result();
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Employee Name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Department</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Leave Type</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Start Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">End Date</th>
@@ -112,6 +153,7 @@ $result = $stmt->get_result();
                             <tr class="hover:bg-gray-50">
                                 <td class="px-6 py-4 text-sm text-gray-900"><?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) ?></td>
                                 <td class="px-6 py-4 text-sm text-gray-500"><?= htmlspecialchars($row['email']) ?></td>
+                                <td class="px-6 py-4 text-sm text-gray-700"><?= htmlspecialchars($row['department_name'] ?? 'N/A') ?></td>
                                 <td class="px-6 py-4 text-sm text-gray-900"><?= htmlspecialchars($row['leave_type']) ?></td>
                                 <td class="px-6 py-4 text-sm text-gray-900"><?= htmlspecialchars($row['leave_start_date']) ?></td>
                                 <td class="px-6 py-4 text-sm text-gray-900"><?= htmlspecialchars($row['leave_end_date']) ?></td>
@@ -151,7 +193,15 @@ $result = $stmt->get_result();
                 </table>
             </div>
         <?php else: ?>
-            <p class="text-gray-600">No pending leave requests found for your department.</p>
+            <p class="text-gray-600">
+                <?php
+                if ($department_id == 6) {
+                    echo "No leave requests pending your approval.";
+                } else {
+                    echo "No pending leave requests found for your department.";
+                }
+                ?>
+            </p>
         <?php endif; ?>
     </div>
 
@@ -171,7 +221,6 @@ $result = $stmt->get_result();
             }
         }, 4000);
     </script>
-
 </body>
 
 </html>
