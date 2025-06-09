@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 04, 2025 at 10:38 AM
+-- Generation Time: Jun 09, 2025 at 02:47 PM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -41,7 +41,8 @@ INSERT INTO `wp_departments` (`department_id`, `department_name`) VALUES
 (2, 'Revenue Division'),
 (3, 'Community Development Division'),
 (4, 'Accounts Division'),
-(5, 'Institutions Division');
+(5, 'Institutions Division'),
+(6, 'Leave Management');
 
 -- --------------------------------------------------------
 
@@ -97,9 +98,20 @@ CREATE TABLE `wp_leave_request` (
   `reason` text DEFAULT NULL,
   `substitute` varchar(255) DEFAULT NULL,
   `status` int(11) DEFAULT NULL COMMENT '1-pending, 2-accept, 3-reject',
+  `step_1_approver_id` int(11) DEFAULT NULL,
+  `step_1_status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `step_1_date` datetime DEFAULT NULL,
+  `step_2_approver_id` int(11) DEFAULT NULL,
+  `step_2_status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `step_2_date` datetime DEFAULT NULL,
+  `step_3_approver_id` int(11) DEFAULT NULL,
+  `step_3_status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `step_3_date` datetime DEFAULT NULL,
+  `final_status` enum('pending','approved','rejected') DEFAULT 'pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `sub_office` varchar(255) NOT NULL,
+  `office_type` enum('head','sub') DEFAULT 'head',
   `rejection_remark` text DEFAULT NULL,
   `department_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -108,8 +120,9 @@ CREATE TABLE `wp_leave_request` (
 -- Dumping data for table `wp_leave_request`
 --
 
-INSERT INTO `wp_leave_request` (`request_id`, `user_id`, `leave_type`, `leave_start_date`, `leave_end_date`, `number_of_days`, `reason`, `substitute`, `status`, `created_at`, `updated_at`, `sub_office`, `rejection_remark`, `department_id`) VALUES
-(47, 14, 'Sick Leave', '2025-06-04', '2025-06-06', 3, 'fever', 'A.P. Jayatissa (53)', 1, '2025-06-04 08:34:44', '2025-06-04 08:35:32', '0', NULL, 4);
+INSERT INTO `wp_leave_request` (`request_id`, `user_id`, `leave_type`, `leave_start_date`, `leave_end_date`, `number_of_days`, `reason`, `substitute`, `status`, `step_1_approver_id`, `step_1_status`, `step_1_date`, `step_2_approver_id`, `step_2_status`, `step_2_date`, `step_3_approver_id`, `step_3_status`, `step_3_date`, `final_status`, `created_at`, `updated_at`, `sub_office`, `office_type`, `rejection_remark`, `department_id`) VALUES
+(48, 14, 'Casual Leave', '2025-06-05', '2025-06-06', 2, 'f', 'Harshani Rasika (33)', 1, 14, 'approved', '2025-06-05 09:50:17', 136, 'rejected', '2025-06-05 14:33:49', NULL, 'pending', NULL, 'pending', '2025-06-05 04:02:34', '2025-06-05 09:03:49', '0', 'head', 'need prrof', 4),
+(49, 14, 'Duty Leave', '2025-06-05', '2025-06-08', 4, 'h', 'J.A.W.P.K. Jayakodi (520)', 1, 133, 'approved', '2025-06-05 10:08:24', 136, 'approved', '2025-06-05 14:31:24', NULL, 'pending', NULL, 'pending', '2025-06-05 04:25:39', '2025-06-05 09:01:24', '0', 'head', NULL, 4);
 
 -- --------------------------------------------------------
 
@@ -179,7 +192,7 @@ INSERT INTO `wp_pradeshiya_sabha_users` (`ID`, `username`, `password`, `first_na
 (8, 'makandura', '$2y$10$lKnb5/0sKwmf6NG.SGuN7OT1mk7NQO9VY.PFsgvLkCEUY6bhnwV0K', 'Makandura', 'User', 'Male', 'makandura@pannalaps.com', '0000-00-00', '', '', 'PS03', '0722222222', 'Officer', '', 'Makandura Sub-Office', '2022-06-15', '2025-03-28 06:07:20', '2025-06-03 11:30:06', 45, 0, 21, 24, NULL, 7),
 (9, 'yakkwila', '$2y$10$zjm8ikYevIZqKr/RR00cxOKgNWVaPR.MRJ.W/jJUk.advhVIicdXm', 'Yakkwila', 'User', 'Male', 'yakkwila@pannalaps.com', '0000-00-00', '', '', 'PS04', '0733333333', 'Supervisor', '', 'Yakkwila Sub-Office', '2021-03-10', '2025-03-28 06:07:20', '2025-06-03 11:30:10', 45, 0, 21, 24, NULL, 7),
 (10, 'hamangalla', '$2y$10$QgZ6K03jSU17zvPQLJX1oOppdiYy50rOFJHkuXM2JfHFj.nr4emMW', 'Hamangalla', 'User', 'Male', 'hamangalla@pannalaps.com', '0000-00-00', '', '', 'PS05', '0744444444', 'Manager', '', 'Hamangalla Sub-Office', '2020-11-20', '2025-03-28 06:07:20', '2025-06-03 11:30:13', 45, 0, 21, 24, NULL, 7),
-(14, 'Yohani123', '$2y$10$UsCbE25Hq1DexRXRW0QJdut4cKqeQ9ylIP2naVocXE4WGJ6Qw/Hom', 'Yohani', 'Abeykoon', 'Female', 'yohani@pannalaps.com', '1999-07-25', '730/2\r\nMadinnagoda', '199970704599', 'PS06', '0778439871', 'Account Assistant', '', 'Head Office', '0000-00-00', '2025-03-31 05:04:46', '2025-06-04 08:34:00', 45, 7, 21, 24, 4, 2),
+(14, 'Yohani123', '$2y$10$UsCbE25Hq1DexRXRW0QJdut4cKqeQ9ylIP2naVocXE4WGJ6Qw/Hom', 'Yohani', 'Abeykoon', 'Female', 'yohani@pannalaps.com', '1999-07-25', '730/2\r\nMadinnagoda', '199970704599', 'PS06', '0778439871', 'Account Assistant', '', 'Head Office', '0000-00-00', '2025-03-31 05:04:46', '2025-06-05 04:25:39', 45, 11, 21, 24, 4, 2),
 (19, 'jayasinghe', '$2y$10$P3Z7X3t5KwkNOuUoV9R6.uWN6iMXWlF7yoQYHjJjIlqKUKXqadYLe', 'J.A.S.', 'Jayasinghe', 'Female', 'jayasinghe@pannalaps.lk', '2025-04-21', '', '', '1', '779082143', '', '', 'Head Office', '2025-04-21', '2025-04-21 10:00:40', '2025-05-29 05:09:54', 45, 0, 19, 24, NULL, NULL),
 (20, 'jayasekara', '$2y$10$lCB1BfbDCS5m6aN6B.N5ZOGeqPmhRQA6PGCbVat5JA3VoVveqmIAO', 'L.B.C.S.', 'Jayasekara', 'Female', 'jayasekara@pannalaps.lk', '2025-04-21', '', '', '2', '710130836', '', '', 'Head Office', '2025-04-21', '2025-04-21 10:02:04', '2025-05-28 09:57:20', 45, 0, 21, 24, NULL, NULL),
 (21, 'ilangkoon', '$2y$10$bXOD4b60f30QbSV80SoHH.TMK4pYx2.g3r49CbsOVazaNEFC5vCGS', 'I.M.G.P.', 'Ilangkoon', 'Female', 'ilangkoon@pannalaps.lk', '2025-04-21', '', '', '3', '707570827', '', '', 'Head Office', '2025-04-21', '2025-04-21 10:10:43', '2025-05-28 09:57:20', 45, 0, 21, 24, NULL, NULL),
@@ -291,7 +304,10 @@ INSERT INTO `wp_pradeshiya_sabha_users` (`ID`, `username`, `password`, `first_na
 (131, 'revenuehead', '$2y$10$vHMlrnQP5tPwKkr79n2Xv.vPtVEWCq69YOVnvPUnICyL0YVgAsoEC', 'Revenue', 'Division', 'Male', 'revenue.head@pannalaps.com', '0000-00-00', '', '', '', '0', 'Head Of Department', '', 'Head Office', '0000-00-00', '2025-06-04 08:23:10', '2025-06-04 08:28:00', 45, 0, 21, 24, 2, 1),
 (132, 'communityhead', '$2y$10$FPKHz.Y3HDnsRRpiqv/yWOUFlOfnH.QxmKv1fWsNZVb44bNGOyW8C', 'Community-Development', 'Division', 'Female', 'community.head@pannalaps.com', '0000-00-00', '', '', '', '0', 'Head Of Department', '', 'Head Office', '0000-00-00', '2025-06-04 08:23:49', '2025-06-04 08:28:01', 45, 0, 21, 24, 3, 1),
 (133, 'accountshead', '$2y$10$PNHWlJUXgdsGiwOPWmpsvefFWYbYe6bY72lVJkO/Mzz/C.OrjKQ.a', 'Accounts', 'Division', '', 'accounts.head@pannalaps.com', '0000-00-00', '', '', '', '0', 'Head Of Department', '', 'Head Office', '0000-00-00', '2025-06-04 08:24:23', '2025-06-04 08:28:03', 45, 0, 21, 24, 4, 1),
-(134, 'institutionshead', '$2y$10$FvpQdLlhnegElD76U06nL.g43v.JLCdSwepkZ5RXaIOyyHsSd8zIq', 'Institutions', 'Division', 'Male', 'institutions.head@pannalaps.com', '0000-00-00', '', '', '', '0', 'Head Of Department', '', 'Head Office', '0000-00-00', '2025-06-04 08:25:04', '2025-06-04 08:28:04', 45, 0, 21, 24, 5, 1);
+(134, 'institutionshead', '$2y$10$FvpQdLlhnegElD76U06nL.g43v.JLCdSwepkZ5RXaIOyyHsSd8zIq', 'Institutions', 'Division', 'Male', 'institutions.head@pannalaps.com', '0000-00-00', '', '', '', '0', 'Head Of Department', '', 'Head Office', '0000-00-00', '2025-06-04 08:25:04', '2025-06-04 08:28:04', 45, 0, 21, 24, 5, 1),
+(135, 'headps', '$2y$10$hikXuhXMw1ChSK9McolhXOxeoHbuKVW6y2eRujI.VnE8yxEvQjYuy', 'Head of', 'Pradeshiya Sabha (PS)', 'Female', 'head.ps@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', '', '', 'Head Office', '0000-00-00', '2025-06-05 05:20:07', '2025-06-05 06:42:23', 45, 0, 21, 24, 6, 3),
+(136, 'headauth', '$2y$10$qnWlK.HG54d79HcYwrxYHOBxOdiFppleKXfTcQLAGA5igeDYU0UUi', 'Authorized', 'Officer', 'Male', 'head.auth@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', '', '', 'Head Office', '0000-00-00', '2025-06-05 05:21:17', '2025-06-05 06:42:26', 45, 0, 21, 24, 6, 5),
+(137, 'leaveofficer', '$2y$10$1T15ZX2MMhpk2txaSbuaT.wiQmfAj2Ak45xRExRGPMAe5wCMWJQEK', 'Leave Officer', 'Head Office', '', 'leave.officer@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', '', '', 'Head Office', '0000-00-00', '2025-06-05 06:08:55', '2025-06-05 06:08:55', 45, 0, 21, 24, 6, 8);
 
 --
 -- Indexes for dumped tables
@@ -344,7 +360,7 @@ ALTER TABLE `wp_pradeshiya_sabha_users`
 -- AUTO_INCREMENT for table `wp_departments`
 --
 ALTER TABLE `wp_departments`
-  MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `wp_designations`
@@ -362,7 +378,7 @@ ALTER TABLE `wp_leave_notifications`
 -- AUTO_INCREMENT for table `wp_leave_request`
 --
 ALTER TABLE `wp_leave_request`
-  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `wp_manual_leave_logs`
@@ -374,7 +390,7 @@ ALTER TABLE `wp_manual_leave_logs`
 -- AUTO_INCREMENT for table `wp_pradeshiya_sabha_users`
 --
 ALTER TABLE `wp_pradeshiya_sabha_users`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=138;
 
 --
 -- Constraints for dumped tables
