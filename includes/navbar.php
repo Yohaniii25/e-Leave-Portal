@@ -66,8 +66,8 @@ elseif ($designation_id == 6) {
 }
 // Leave Officer (designation_id = 8)
 elseif ($designation_id == 8) {
-    echo nav_link('/user/leave-approvals.php', 'Leave Approvals');
-    echo nav_link('/user/leave-history.php', 'Leave History');
+    echo nav_link('../admin/leave-approvals.php', 'Leave Approvals');
+    echo nav_link('../admin/leave-history.php', 'Leave History');
 }
 // Head of SubOffice (designation_id = 9)
 elseif ($designation_id == 9) {
