@@ -12,13 +12,24 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['designation_id'] != 8) {
 // Handle approve/reject
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST['action'])) {
     $leaveId = intval($_POST['request_id']);
-    $action = $_POST['action'] === 'approve' ? 'approved' : 'rejected';
+    $action = $_POST['action'];
 
-    $stmt = $conn->prepare("UPDATE wp_leave_request SET step_3_status = ?, final_status = ? WHERE request_id = ?");
-    $stmt->bind_param("ssi", $action, $action, $leaveId);
+    if ($action === 'approve') {
+        $final_status = 'approved';
+        $status = 2;
+    } elseif ($action === 'reject') {
+        $final_status = 'rejected';
+        $status = 3;
+    } else {
+        die("Invalid action.");
+    }
+
+    $stmt = $conn->prepare("UPDATE wp_leave_request SET step_3_status = ?, final_status = ?, status = ? WHERE request_id = ?");
+    $stmt->bind_param("ssii", $final_status, $final_status, $status, $leaveId);
     $stmt->execute();
     $stmt->close();
 }
+
 
 // 🟡 Only get users in department_id = 6 (Head Office)
 $query = "

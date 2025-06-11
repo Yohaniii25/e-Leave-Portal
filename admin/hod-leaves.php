@@ -58,6 +58,7 @@ $sql = "
     ORDER BY lr.leave_start_date DESC
 ";
 
+$department_id = $user['department_id'];
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
     die("Prepare failed: " . $conn->error);
