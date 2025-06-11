@@ -3,7 +3,6 @@ session_start();
 require '../includes/dbconfig.php';
 require '../includes/admin-navbar.php';
 
-
 if (!isset($_SESSION['user'])) {
     header("Location: ../index.php");
     exit();
@@ -11,11 +10,15 @@ if (!isset($_SESSION['user'])) {
 
 $email = $_SESSION['user']['email'];
 
+// Verify Admin Access
 $query = "SELECT d.designation_name, u.sub_office 
           FROM wp_pradeshiya_sabha_users u
           LEFT JOIN wp_designations d ON u.designation_id = d.designation_id
           WHERE u.email = ?";
 $stmt = $conn->prepare($query);
+if (!$stmt) {
+    die("Prepare failed (Admin check): (" . $conn->errno . ") " . $conn->error);
+}
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -41,6 +44,9 @@ $user_id = intval($_GET['id']);
 // FETCH USER DATA
 $sql = "SELECT * FROM wp_pradeshiya_sabha_users WHERE ID = ? AND sub_office = ?";
 $stmt = $conn->prepare($sql);
+if (!$stmt) {
+    die("Prepare failed (Fetch user): (" . $conn->errno . ") " . $conn->error);
+}
 $stmt->bind_param("is", $user_id, $admin_office);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -75,18 +81,18 @@ if ($desig_result) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $first_name = trim($_POST['first_name']);
     $last_name = trim($_POST['last_name']);
-    $gender = $_POST['gender'];
-    $nic = trim($_POST['nic']);
-    $address = trim($_POST['address']);
     $email = trim($_POST['email']);
     $phone = trim($_POST['phone_number']);
-    $department = intval($_POST['department']);
     $designation = $_POST['designation'];
     $custom_designation = trim($_POST['custom_designation'] ?? '');
-    $date_of_joining = $_POST['date_of_joining'];
     $password = !empty($_POST['password']) ? password_hash($_POST['password'], PASSWORD_DEFAULT) : null;
+    
+    // Leave balances - casual, sick, and total leave balance
+    $casual_leave_balance = isset($_POST['casual_leave_balance']) ? intval($_POST['casual_leave_balance']) : 0;
+    $sick_leave_balance = isset($_POST['sick_leave_balance']) ? intval($_POST['sick_leave_balance']) : 0;
+    $leave_balance = $casual_leave_balance + $sick_leave_balance; // Total leave balance
 
-    // Determine final designation name
+    // Determine final designation
     if ($designation === 'custom' && !empty($custom_designation)) {
         $designation_final = $custom_designation;
     } else {
@@ -99,102 +105,68 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    if (empty($first_name) || empty($last_name) || empty($email) || empty($nic) || empty($designation_final) || empty($date_of_joining)) {
-        $error = "Please fill in all required fields: First Name, Last Name, NIC, Email, Designation, and Date of Joining.";
+    // Basic validation
+    if (empty($first_name) || empty($last_name) || empty($email) || empty($designation_final)) {
+        $error = "Please fill in all required fields: First Name, Last Name, Email, and Designation.";
     } else {
-        // Build SQL
-        $sql = "UPDATE wp_pradeshiya_sabha_users SET 
+        // SQL Update - Update essential fields + all leave balances
+        if ($password) {
+            // Update with password
+            $stmt = $conn->prepare("UPDATE wp_pradeshiya_sabha_users SET 
                 first_name = ?, 
                 last_name = ?, 
-                gender = ?, 
-                NIC = ?, 
-                address = ?, 
                 email = ?, 
                 phone_number = ?, 
                 designation = ?, 
-                date_of_joining = ?";
+                password = ?,
+                leave_balance = ?,
+                casual_leave_balance = ?,
+                sick_leave_balance = ?
+                WHERE ID = ? AND sub_office = ?");
+            
+            if (!$stmt) {
+                die("Prepare failed (Update with password): (" . $conn->errno . ") " . $conn->error);
+            }
 
-        if ($password) {
-            $sql .= ", password = ?";
-        }
-
-        $sql .= " WHERE ID = ? AND sub_office = ?";
-
-        // Prepare and bind
-        $stmt = $conn->prepare($sql);
-
-        if ($password) {
-            $stmt = $conn->prepare("UPDATE wp_pradeshiya_sabha_users SET 
-        first_name = ?, 
-        last_name = ?, 
-        gender = ?, 
-        NIC = ?, 
-        address = ?, 
-        email = ?, 
-        phone_number = ?, 
-        designation = ?, 
-        date_of_joining = ?, 
-        password = ?
-        WHERE ID = ? AND sub_office = ?");
-
-            $stmt->bind_param(
-                "ssssssssssis",  // corrected types and order
-                $first_name,
-                $last_name,
-                $gender,
-                $nic,
-                $address,
-                $email,
-                $phone,
-                $designation_final,
-                $date_of_joining,
-                $password,
-                $user_id,
-                $admin_office
-            );
+            $stmt->bind_param("ssssssiiiiis", $first_name, $last_name, $email, $phone, $designation_final, $password, $leave_balance, $casual_leave_balance, $sick_leave_balance, $user_id, $admin_office);
         } else {
+            // Update without password
             $stmt = $conn->prepare("UPDATE wp_pradeshiya_sabha_users SET 
-        first_name = ?, 
-        last_name = ?, 
-        gender = ?, 
-        NIC = ?, 
-        address = ?, 
-        email = ?, 
-        phone_number = ?, 
-        designation = ?, 
-        date_of_joining = ?
-        WHERE ID = ? AND sub_office = ?");
+                first_name = ?, 
+                last_name = ?, 
+                email = ?, 
+                phone_number = ?, 
+                designation = ?,
+                leave_balance = ?,
+                casual_leave_balance = ?,
+                sick_leave_balance = ?
+                WHERE ID = ? AND sub_office = ?");
+            
+            if (!$stmt) {
+                die("Prepare failed (Update without password): (" . $conn->errno . ") " . $conn->error);
+            }
 
-            $stmt->bind_param(
-                "ssssssssiss",  // corrected type string (11 params)
-                $first_name,
-                $last_name,
-                $gender,
-                $nic,
-                $address,
-                $email,
-                $phone,
-                $designation_final,
-                $date_of_joining,
-                $user_id,
-                $admin_office
-            );
+            $stmt->bind_param("sssssiiiis", $first_name, $last_name, $email, $phone, $designation_final, $leave_balance, $casual_leave_balance, $sick_leave_balance, $user_id, $admin_office);
         }
-
 
         if ($stmt->execute()) {
             $success = "User updated successfully!";
+            // Refresh user data
             $stmt = $conn->prepare("SELECT * FROM wp_pradeshiya_sabha_users WHERE ID = ?");
-            $stmt->bind_param("i", $user_id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $user = $result->fetch_assoc();
+            if ($stmt) {
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $user = $result->fetch_assoc();
+            }
         } else {
             $error = "Error updating user: " . $stmt->error;
         }
+        $stmt->close();
     }
 }
 ?>
+
 
 
 <!DOCTYPE html>
@@ -345,38 +317,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <input type="date" name="date_of_joining" value="<?php echo htmlspecialchars($user['date_of_joining']); ?>" required
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
                         </div>
-                    </div>
+                        <!-- leave balance change -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-medium mb-1">Leave Balance</label>
+                            <input type="number" name="leave_balance" value="<?php echo htmlspecialchars($user['leave_balance']); ?>"
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-medium mb-1">Casual Leave Balance</label>
+                            <input type="number" name="casual_leave_balance" value="<?php echo htmlspecialchars($user['casual_leave_balance']); ?>"
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-medium mb-1">Sick Leave Balance</label>
+                            <input type="number" name="sick_leave_balance" value="<?php echo htmlspecialchars($user['sick_leave_balance']); ?>"
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+                        </div>
+                        <div>
 
-                    <!-- Password Section (Full Width) -->
-                    <div class="col-span-1 md:col-span-2 mt-4">
-                        <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">
-                            <i class="fas fa-lock mr-2 text-yellow-500"></i>Password
-                        </h2>
-
-                        <div class="bg-yellow-50 p-4 rounded-lg mb-4">
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-info-circle text-yellow-500 mr-2 mt-1"></i>
-                                </div>
-                                <p class="text-yellow-700 text-sm">Leave blank if you do not want to change the password.</p>
-                            </div>
                         </div>
 
-                        <input type="password" name="password" placeholder="Enter new password" autocomplete="new-password"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 transition" />
-                    </div>
-                </div>
+                        <!-- Password Section (Full Width) -->
+                        <div class="col-span-1 md:col-span-2 mt-4">
+                            <h2 class="text-xl font-semibold text-gray-700 border-b pb-2 mb-4">
+                                <i class="fas fa-lock mr-2 text-yellow-500"></i>Password
+                            </h2>
 
-                <div class="mt-8 flex justify-between">
-                    <a href="view-user.php?id=<?= $user_id; ?>"
-                        class="inline-block bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg transition">
-                        Cancel
-                    </a>
-                    <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition">
-                        Save Changes
-                    </button>
-                </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg mb-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-info-circle text-yellow-500 mr-2 mt-1"></i>
+                                    </div>
+                                    <p class="text-yellow-700 text-sm">Leave blank if you do not want to change the password.</p>
+                                </div>
+                            </div>
+
+                            <input type="password" name="password" placeholder="Enter new password" autocomplete="new-password"
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 transition" />
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-between">
+                        <a href="view-user.php?id=<?= $user_id; ?>"
+                            class="inline-block bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 px-6 rounded-lg transition">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition">
+                            Save Changes
+                        </button>
+                    </div>
             </form>
         </div>
     </div>
