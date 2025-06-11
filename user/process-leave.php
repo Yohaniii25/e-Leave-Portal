@@ -15,7 +15,7 @@ if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'E
 $user_id = $_SESSION['user']['id'];
 $sub_office = $_SESSION['user']['sub_office'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
-$department = $_SESSION['user']['department'] ?? '';  
+$department_id = $_SESSION['user']['department_id'] ?? '';
 
 
 $balanceQuery = $conn->prepare("SELECT casual_leave_balance, sick_leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?");
@@ -70,8 +70,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 
-    $stmt = $conn->prepare("INSERT INTO wp_leave_request (user_id, leave_type, leave_start_date, leave_end_date, number_of_days, reason, substitute, sub_office, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)");
-    $stmt->bind_param("isssissi", $user_id, $leave_type, $start_date, $end_date, $days, $reason, $substitute, $sub_office);
+    $stmt = $conn->prepare("INSERT INTO wp_leave_request (
+    user_id, leave_type, leave_start_date, leave_end_date,
+    number_of_days, reason, substitute, sub_office, department_id, status
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+    $status = 1;
+    $stmt->bind_param(
+        "isssisssii",
+        $user_id,
+        $leave_type,
+        $start_date,
+        $end_date,
+        $days,
+        $reason,
+        $substitute,
+        $sub_office,
+        $department_id,
+        $status
+    );
 
     if ($stmt->execute()) {
         $request_id = $stmt->insert_id;
@@ -88,37 +105,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
 
-        $mail = new PHPMailer(true);
-        try {
-            $mail->setFrom('no-reply@yourdomain.com', 'Leave Management System');
-            $mail->addAddress('yohanii725@gmail.com');
-            $mail->isHTML(true);
-            $mail->Subject = "New Leave Request from $full_name";
-            $mail->Body = "
-                <html><body>
-                <h2>Leave Request Details</h2>
-                <p><strong>Employee Name:</strong> $full_name</p>
-                <p><strong>Department:</strong> $department</p>
-                <p><strong>Leave Type:</strong> $leave_type</p>
-                <p><strong>Leave Dates:</strong> $start_date to $end_date</p>
-                <p><strong>Number of Days:</strong> $days</p>
-                <p><strong>Reason:</strong> $reason</p>
-                <p><strong>Substitute:</strong> $substitute</p>
-                <p>
-                    <a href='http://yourwebsite.com/approve_leave.php?request_id={$request_id}' style='background:green; color:white; padding:10px;'>Approve</a>
-                    &nbsp;|&nbsp;
-                    <a href='http://yourwebsite.com/reject_leave.php?request_id={$request_id}' style='background:red; color:white; padding:10px;'>Reject</a>
-                </p>
-                </body></html>
-            ";
-            $mail->isMail();
-            $mail->send();
+        // $mail = new PHPMailer(true);
+        // try {
+        //     $mail->setFrom('no-reply@yourdomain.com', 'Leave Management System');
+        //     $mail->addAddress('yohanii725@gmail.com');
+        //     $mail->isHTML(true);
+        //     $mail->Subject = "New Leave Request from $full_name";
+        //     $mail->Body = "
+        //         <html><body>
+        //         <h2>Leave Request Details</h2>
+        //         <p><strong>Employee Name:</strong> $full_name</p>
+        //         <p><strong>Department:</strong> $department</p>
+        //         <p><strong>Leave Type:</strong> $leave_type</p>
+        //         <p><strong>Leave Dates:</strong> $start_date to $end_date</p>
+        //         <p><strong>Number of Days:</strong> $days</p>
+        //         <p><strong>Reason:</strong> $reason</p>
+        //         <p><strong>Substitute:</strong> $substitute</p>
+        //         <p>
+        //             <a href='http://yourwebsite.com/approve_leave.php?request_id={$request_id}' style='background:green; color:white; padding:10px;'>Approve</a>
+        //             &nbsp;|&nbsp;
+        //             <a href='http://yourwebsite.com/reject_leave.php?request_id={$request_id}' style='background:red; color:white; padding:10px;'>Reject</a>
+        //         </p>
+        //         </body></html>
+        //     ";
+        //     $mail->isMail();
+        //     $mail->send();
 
-            $_SESSION['success_message'] = "Leave request submitted successfully.";
-        } catch (Exception $e) {
-            error_log("Email error: " . $mail->ErrorInfo);
-            $_SESSION['error_message'] = "Leave saved, but email not sent.";
-        }
+        //     $_SESSION['success_message'] = "Leave request submitted successfully.";
+        // } catch (Exception $e) {
+        //     error_log("Email error: " . $mail->ErrorInfo);
+        //     $_SESSION['error_message'] = "Leave saved, but email not sent.";
+        // }
+        $_SESSION['success_message'] = "Leave submitted successfully.";
         header("Location: leave_request.php");
         exit();
     } else {

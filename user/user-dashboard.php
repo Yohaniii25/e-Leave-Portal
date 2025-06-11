@@ -124,7 +124,7 @@ if ($stmt) {
         </div>
 
         <!-- Actions Section -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mt-8">
             <!-- Request Leave -->
             <div class="bg-blue-500 text-white p-6 rounded-lg shadow-lg hover:bg-blue-600">
                 <h2 class="text-xl font-semibold">Request Leave</h2>
@@ -132,12 +132,7 @@ if ($stmt) {
                 <a href="./leave_request.php" class="text-white mt-4 inline-block">Apply Now →</a>
             </div>
 
-            <!-- View Policy -->
-            <div class="bg-green-500 text-white p-6 rounded-lg shadow-lg hover:bg-green-600">
-                <h2 class="text-xl font-semibold">Leave Policy</h2>
-                <p class="mt-2">View leave policies and guidelines.</p>
-                <a href="./leave_policy.php" class="text-white mt-4 inline-block">View Policy →</a>
-            </div>
+
 
             <!-- Visit Official Website -->
             <div class="bg-yellow-500 text-white p-6 rounded-lg shadow-lg hover:bg-yellow-600">

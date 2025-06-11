@@ -1,5 +1,7 @@
 <?php
 session_start();
+
+
 require '../includes/dbconfig.php';
 
 
@@ -16,7 +18,7 @@ if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'E
 $user_id = $_SESSION['user']['id'];
 $sub_office = $_SESSION['user']['sub_office'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
-$department = $_SESSION['user']['department'] ?? '';  
+$department_id = $_SESSION['user']['department_id'] ?? null;
 
 $leaveQuery = $conn->prepare("
     SELECT leave_balance, casual_leave_balance, sick_leave_balance, duty_leave_count 
@@ -68,11 +70,19 @@ while ($row = $approvedResult->fetch_assoc()) {
 $remaining = [
     'Casual Leave' => $casualLeaveBalance - $approved['Casual Leave'],
     'Sick Leave' => $sickLeaveBalance - $approved['Sick Leave'],
-    
+
 ];
 
 $totalApproved = array_sum($approved);
 $totalRemaining = $leaveBalance - $totalApproved;
+
+if (isset($_SESSION['success_message'])): ?>
+    <div style="background-color: #d4edda; color: #155724; padding: 10px; margin-bottom: 15px; border: 1px solid #c3e6cb; border-radius: 4px;">
+        <?= $_SESSION['success_message'] ?>
+    </div>
+    <?php unset($_SESSION['success_message']); ?>
+<?php endif;
+
 
 ?>
 
@@ -89,8 +99,8 @@ $totalRemaining = $leaveBalance - $totalApproved;
     <title>Request Leave</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
 </head>
 
@@ -164,8 +174,8 @@ $totalRemaining = $leaveBalance - $totalApproved;
                             <span class="font-medium text-blue-600"><?= $casualLeaveBalance ?></span>
                         </div>
                         <div class="flex justify-between text-xs text-gray-500">
-                            <span>Balance: <?= $approved['Casual Leave'] ?></span>
-                            <span>Approved: <?= $remaining['Casual Leave'] ?></span>
+                            <span>Approved: <?= $approved['Casual Leave'] ?></span>
+                            <span>Balance: <?= $remaining['Casual Leave'] ?></span>
                         </div>
                     </div>
 
@@ -175,8 +185,8 @@ $totalRemaining = $leaveBalance - $totalApproved;
                             <span class="font-medium text-blue-600"><?= $sickLeaveBalance ?></span>
                         </div>
                         <div class="flex justify-between text-xs text-gray-500">
-                            <span>Balance: <?= $approved['Sick Leave'] ?></span>
-                            <span>Approved: <?= $remaining['Sick Leave'] ?></span>
+                            <span>Approved: <?= $approved['Sick Leave'] ?></span>
+                            <span>Balance: <?= $remaining['Sick Leave'] ?></span>
                         </div>
                     </div>
 
@@ -239,23 +249,23 @@ $totalRemaining = $leaveBalance - $totalApproved;
                         </select>
                     </div>
 
-<div>
-    <label class="block text-sm font-medium text-gray-700 mb-1">Substitute (Optional)</label>
-    <input type="text" id="substitute" name="substitute" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2 px-3 border" placeholder="Colleague's name">
-</div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Substitute (Optional)</label>
+                        <input type="text" id="substitute" name="substitute" class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2 px-3 border" placeholder="Colleague's name">
+                    </div>
 
-                    
+
                     <script>
                         $(function() {
-                        $("#substitute").autocomplete({
-                        source: 'search_users.php',
-                        minLength: 2,
-                        select: function(event, ui) {
-                        $("#substitute").val(ui.item.label); 
-                        return false;
-                        }
-                    });
-                });
+                            $("#substitute").autocomplete({
+                                source: 'search_users.php',
+                                minLength: 2,
+                                select: function(event, ui) {
+                                    $("#substitute").val(ui.item.label);
+                                    return false;
+                                }
+                            });
+                        });
                     </script>
 
 

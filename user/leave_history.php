@@ -16,11 +16,11 @@ if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'E
 $user_id = $_SESSION['user']['id'];
 $sub_office = $_SESSION['user']['sub_office'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
-$department = $_SESSION['user']['department'] ?? '';  
+$department = $_SESSION['user']['department'] ?? '';
 
 $query = "SELECT leave_type, leave_start_date, leave_end_date, number_of_days, status, created_at 
           FROM wp_leave_request 
-          WHERE user_id = ? AND status = 2 
+          WHERE user_id = ? AND status IN (1, 2)
           ORDER BY created_at DESC";
 
 $stmt = $conn->prepare($query);
@@ -61,25 +61,29 @@ $result = $stmt->get_result();
                         <th class="py-3 px-4 border-b">End Date</th>
                         <th class="py-3 px-4 border-b">Days</th>
                         <th class="py-3 px-4 border-b">Applied On</th>
+                        <th class="py-3 px-4 border-b">Status</th>
                     </tr>
                 </thead>
                 <tbody class="text-gray-600 text-sm">
                     <?php if ($result->num_rows > 0): ?>
                         <?php while ($row = $result->fetch_assoc()): ?>
+                            <?php $statusText = $row['status'] == 2 ? 'Approved' : 'Requested'; ?>
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="py-3 px-4 border-b"><?php echo htmlspecialchars($row['leave_type']); ?></td>
                                 <td class="py-3 px-4 border-b"><?php echo htmlspecialchars($row['leave_start_date']); ?></td>
                                 <td class="py-3 px-4 border-b"><?php echo htmlspecialchars($row['leave_end_date']); ?></td>
                                 <td class="py-3 px-4 border-b"><?php echo htmlspecialchars($row['number_of_days']); ?></td>
                                 <td class="py-3 px-4 border-b"><?php echo htmlspecialchars($row['created_at']); ?></td>
+                                <td class="py-3 px-4 border-b"><?php echo htmlspecialchars($statusText); ?></td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-gray-500">No approved leave history found.</td>
+                            <td colspan="6" class="text-center py-4 text-gray-500">No leave records found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
+
             </table>
         </div>
     </div>

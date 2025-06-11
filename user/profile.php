@@ -16,7 +16,21 @@ $department = $_SESSION['user']['department'] ?? '';
 $user_id = $_SESSION['user']['id'];
 
 // Get user info + leave balances
-$stmt = $conn->prepare("SELECT * FROM wp_pradeshiya_sabha_users WHERE ID = ?");
+$stmt = $conn->prepare(
+    "SELECT u.*, d.department_name 
+     FROM wp_pradeshiya_sabha_users u
+     LEFT JOIN wp_departments d ON u.department_id = d.department_id
+     WHERE u.ID = ?"
+);
+
+
+if (!$stmt) {
+    die("Prepare failed: (" . $conn->errno . ") " . $conn->error);
+}
+if (!isset($user_id)) {
+    die("User ID is not set in session.");
+}
+
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -46,7 +60,8 @@ $user = $result->fetch_assoc();
                 <div class="flex flex-col md:flex-row md:items-center justify-between">
                     <div>
                         <h1 class="text-3xl font-bold"><?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?></h1>
-                        <p class="mt-1 opacity-90"><?= htmlspecialchars($user['designation']) ?> | <?= htmlspecialchars($user['department']) ?></p>
+                        <p class="mt-1 opacity-90"><?= htmlspecialchars($user['designation']) ?> | <?= htmlspecialchars($user['department_name'] ?? 'N/A') ?>
+</p>
                     </div>
                     <div class="mt-4 md:mt-0">
                         <div class="inline-flex items-center justify-center bg-white bg-opacity-20 backdrop-filter backdrop-blur-sm rounded-full w-24 h-24">
@@ -107,7 +122,8 @@ $user = $result->fetch_assoc();
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
                             <div>
                                 <p class="text-sm text-gray-500">Department</p>
-                                <p class="font-medium text-gray-800"><?= htmlspecialchars($user['department']) ?></p>
+                                <p class="font-medium text-gray-800"><?= htmlspecialchars($user['department_name'] ?? 'N/A') ?>
+</p>
                             </div>
 
                             <div>
@@ -137,7 +153,7 @@ $user = $result->fetch_assoc();
                         Leave Balances
                     </h2>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
                         <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
                             <p class="text-sm text-blue-600 mb-1">Total Leave</p>
                             <p class="text-2xl font-bold text-blue-800"><?= $user['leave_balance'] ?></p>
@@ -156,11 +172,7 @@ $user = $result->fetch_assoc();
                             <p class="text-sm text-red-600">days</p>
                         </div>
 
-                        <div class="bg-purple-50 border border-purple-100 rounded-lg p-4">
-                            <p class="text-sm text-purple-600 mb-1">Annual Leave</p>
-                            <p class="text-2xl font-bold text-purple-800"><?= $user['annual_leave_balance'] ?></p>
-                            <p class="text-sm text-purple-600">days</p>
-                        </div>
+
                     </div>
                 </div>
             </div>
