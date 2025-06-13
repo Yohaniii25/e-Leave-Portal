@@ -1,19 +1,22 @@
 <?php
 session_start();
 require '../includes/dbconfig.php';
-require '../includes/navbar.php';
 
 if (!isset($_SESSION['user'])) {
     header("Location: ../index.php");
     exit();
 }
 
-$user_id = $_SESSION['user']['id'];
+$user = $_SESSION['user'];
+$user_id = $user['id'];
+
 $step = $_POST['step'];
 $request_id = $_POST['request_id'];
-$status = $_POST['status']; // 'approved' or 'rejected'
-$remark = $_POST['rejection_remark'] ?? null;
+$action = $_POST['action']; // 'approve' or 'reject'
 $now = date('Y-m-d H:i:s');
+
+$status = ($action === 'approve') ? 'approved' : 'rejected';
+$remark = ($action === 'reject' && isset($_POST['rejection_remark'])) ? $_POST['rejection_remark'] : null;
 
 if ($step == 1) {
     $stmt = $conn->prepare("UPDATE wp_leave_request 
@@ -21,7 +24,7 @@ if ($step == 1) {
             step_1_approver_id = ?, 
             step_1_date = ?, 
             rejection_remark = IF(? = 'rejected', ?, rejection_remark),
-            final_status = IF(? = 'rejected', 'rejected', final_status) 
+            final_status = IF(? = 'rejected', 'rejected', final_status)
         WHERE request_id = ?");
     $stmt->bind_param("sissssi", $status, $user_id, $now, $status, $remark, $status, $request_id);
 } elseif ($step == 2) {
@@ -36,7 +39,7 @@ if ($step == 1) {
 }
 
 if ($stmt->execute()) {
-    $_SESSION['success_message'] = "Leave request has been {$status} successfully.";
+    $_SESSION['success_message'] = "Leave has been {$status}.";
 } else {
     $_SESSION['error_message'] = "Failed to update leave request.";
 }
