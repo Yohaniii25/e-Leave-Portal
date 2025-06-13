@@ -4,6 +4,7 @@ require '../includes/dbconfig.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+
 require '../vendor/autoload.php';
 
 if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'Employee') !== 0) {
@@ -16,17 +17,13 @@ $sub_office = $_SESSION['user']['sub_office'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
 $department_id = $_SESSION['user']['department_id'] ?? '';
 
-// ✅ Determine office_type based on sub_office value
-$sub_offices = ['Pannala Sub-Office', 'Makandura Sub-Office', 'Yakkwila Sub-Office', 'Hamangalla Sub-Office'];
-$office_type = in_array($sub_office, $sub_offices) ? 'sub' : 'head';
 
-// Fetch leave balances
 $balanceQuery = $conn->prepare("SELECT casual_leave_balance, sick_leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?");
 $balanceQuery->bind_param("i", $user_id);
 $balanceQuery->execute();
 $balances = $balanceQuery->get_result()->fetch_assoc();
 
-// Fetch used leave (pending or approved)
+
 $used = ['Casual Leave' => 0, 'Sick Leave' => 0];
 $usageQuery = $conn->prepare("
     SELECT leave_type, SUM(number_of_days) AS total_requested 
@@ -43,10 +40,10 @@ while ($row = $usageResult->fetch_assoc()) {
 
 $remaining = [
     'Casual Leave' => $balances['casual_leave_balance'] - $used['Casual Leave'],
-    'Sick Leave'   => $balances['sick_leave_balance'] - $used['Sick Leave'],
+    'Sick Leave'   => $balances['sick_leave_balance']   - $used['Sick Leave'],
 ];
 
-// ✅ Handle form submission
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $leave_type = $_POST['leave_type'];
     $start_date = $_POST['leave_start_date'];
@@ -72,16 +69,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // ✅ Insert leave request with office_type
-    $stmt = $conn->prepare("
-        INSERT INTO wp_leave_request (
-            user_id, leave_type, leave_start_date, leave_end_date,
-            number_of_days, reason, substitute, sub_office, department_id, office_type, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
+
+    $stmt = $conn->prepare("INSERT INTO wp_leave_request (
+    user_id, leave_type, leave_start_date, leave_end_date,
+    number_of_days, reason, substitute, sub_office, department_id, status
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
     $status = 1;
     $stmt->bind_param(
-        "isssisssssi",
+        "isssisssii",
         $user_id,
         $leave_type,
         $start_date,
@@ -91,24 +87,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $substitute,
         $sub_office,
         $department_id,
-        $office_type,
         $status
     );
 
     if ($stmt->execute()) {
         $request_id = $stmt->insert_id;
 
-        // ✅ If Duty Leave, update count immediately
         if ($leave_type === 'Duty Leave') {
+            // Increment the duty_leave_count in the users table
             $updateDutyLeave = $conn->prepare("
-                UPDATE wp_pradeshiya_sabha_users
-                SET duty_leave_count = duty_leave_count + ?
-                WHERE ID = ?
-            ");
+        UPDATE wp_pradeshiya_sabha_users
+        SET duty_leave_count = duty_leave_count + ?
+        WHERE ID = ?
+    ");
             $updateDutyLeave->bind_param("ii", $days, $user_id);
             $updateDutyLeave->execute();
         }
 
+
+        // $mail = new PHPMailer(true);
+        // try {
+        //     $mail->setFrom('no-reply@yourdomain.com', 'Leave Management System');
+        //     $mail->addAddress('yohanii725@gmail.com');
+        //     $mail->isHTML(true);
+        //     $mail->Subject = "New Leave Request from $full_name";
+        //     $mail->Body = "
+        //         <html><body>
+        //         <h2>Leave Request Details</h2>
+        //         <p><strong>Employee Name:</strong> $full_name</p>
+        //         <p><strong>Department:</strong> $department</p>
+        //         <p><strong>Leave Type:</strong> $leave_type</p>
+        //         <p><strong>Leave Dates:</strong> $start_date to $end_date</p>
+        //         <p><strong>Number of Days:</strong> $days</p>
+        //         <p><strong>Reason:</strong> $reason</p>
+        //         <p><strong>Substitute:</strong> $substitute</p>
+        //         <p>
+        //             <a href='http://yourwebsite.com/approve_leave.php?request_id={$request_id}' style='background:green; color:white; padding:10px;'>Approve</a>
+        //             &nbsp;|&nbsp;
+        //             <a href='http://yourwebsite.com/reject_leave.php?request_id={$request_id}' style='background:red; color:white; padding:10px;'>Reject</a>
+        //         </p>
+        //         </body></html>
+        //     ";
+        //     $mail->isMail();
+        //     $mail->send();
+
+        //     $_SESSION['success_message'] = "Leave request submitted successfully.";
+        // } catch (Exception $e) {
+        //     error_log("Email error: " . $mail->ErrorInfo);
+        //     $_SESSION['error_message'] = "Leave saved, but email not sent.";
+        // }
         $_SESSION['success_message'] = "Leave submitted successfully.";
         header("Location: leave_request.php");
         exit();

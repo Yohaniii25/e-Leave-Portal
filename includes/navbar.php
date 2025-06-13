@@ -60,19 +60,15 @@ elseif ($designation_id == 5 || $designation_id == 3) {
     echo nav_link('../admin/head-of-ps-approval.php', 'HOD Approved Leaves');
     echo nav_link('../admin/reports.php', 'Reports');
 }
-// Sub office Authorized Officer (designation_id = 6)
-elseif ($designation_id == 6) {
-    echo nav_link('/user/suboffice-leaves.php', 'SubOffice Leave Requests');
-}
 // Leave Officer (designation_id = 8)
 elseif ($designation_id == 8) {
     echo nav_link('../admin/leave-approvals.php', 'Leave Approvals');
     echo nav_link('../admin/leave-history.php', 'Leave History');
 }
 // Head of SubOffice (designation_id = 9)
-elseif ($designation_id == 9) {
-    echo nav_link('/user/suboffice-dashboard.php', 'SubOffice Dashboard');
-    echo nav_link('/user/suboffice-leaves.php', 'SubOffice Leave Requests');
+elseif ($designation_id == 9 || $designation_id == 6 ){
+    echo nav_link('../admin/suboffice-leave-approvals.php', 'SubOffice Leave Approvals');
+    echo nav_link('../admin/suboffice-leaves.php', 'SubOffice Leave Report');
 }
 // Employee (designation_id = 2)
 elseif ($designation_id == 2) {

@@ -128,7 +128,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 die("Prepare failed (Update with password): (" . $conn->errno . ") " . $conn->error);
             }
 
-            $stmt->bind_param("ssssssiiiiis", $first_name, $last_name, $email, $phone, $designation_final, $password, $leave_balance, $casual_leave_balance, $sick_leave_balance, $user_id, $admin_office);
+            $stmt->bind_param("ssssssiiiis", $first_name, $last_name, $email, $phone, $designation_final, $password, $leave_balance, $casual_leave_balance, $sick_leave_balance, $user_id, $admin_office);
         } else {
             // Update without password
             $stmt = $conn->prepare("UPDATE wp_pradeshiya_sabha_users SET 
