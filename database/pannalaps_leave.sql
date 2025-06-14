@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 12, 2025 at 01:19 PM
+-- Generation Time: Jun 14, 2025 at 11:59 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -67,7 +67,8 @@ INSERT INTO `wp_designations` (`designation_id`, `designation_name`) VALUES
 (6, 'Sub office Authorized Officer'),
 (7, 'Admin'),
 (8, 'Leave Officer'),
-(9, 'Head of SubOffice');
+(9, 'Head of SubOffice'),
+(10, 'SubOffice Leave Officer\r\n');
 
 -- --------------------------------------------------------
 
@@ -121,7 +122,8 @@ CREATE TABLE `wp_leave_request` (
 --
 
 INSERT INTO `wp_leave_request` (`request_id`, `user_id`, `leave_type`, `leave_start_date`, `leave_end_date`, `number_of_days`, `reason`, `substitute`, `status`, `step_1_approver_id`, `step_1_status`, `step_1_date`, `step_2_approver_id`, `step_2_status`, `step_2_date`, `step_3_approver_id`, `step_3_status`, `step_3_date`, `final_status`, `created_at`, `updated_at`, `sub_office`, `office_type`, `rejection_remark`, `department_id`) VALUES
-(63, 7, 'Casual Leave', '2025-06-12', '2025-06-14', 3, 'fever', '', 2, NULL, 'pending', NULL, NULL, 'pending', NULL, NULL, 'pending', NULL, 'pending', '2025-06-12 10:19:59', '2025-06-12 10:19:59', 'Pannala Sub-Office', 'head', NULL, NULL);
+(65, 141, 'Duty Leave', '2025-06-01', '2025-06-08', 8, 'f', 'Yohani', 1, 142, 'approved', '2025-06-13 14:20:48', 144, 'approved', '2025-06-14 11:12:33', NULL, 'pending', NULL, 'approved', '2025-06-12 12:30:32', '2025-06-14 09:12:33', 'Pannala Sub-Office', 'sub', NULL, 1),
+(66, 141, 'Sick Leave', '2025-06-14', '2025-06-16', 3, 'fever', 'Test Anuradha ()', 1, 143, 'approved', '2025-06-14 11:17:14', 144, 'approved', '2025-06-14 11:17:41', NULL, 'pending', NULL, 'approved', '2025-06-14 09:16:38', '2025-06-14 09:17:41', 'Pannala Sub-Office', 'sub', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -309,10 +311,10 @@ INSERT INTO `wp_pradeshiya_sabha_users` (`ID`, `username`, `password`, `first_na
 (135, 'headps', '$2y$10$hikXuhXMw1ChSK9McolhXOxeoHbuKVW6y2eRujI.VnE8yxEvQjYuy', 'Head of', 'Pradeshiya Sabha (PS)', 'Female', 'head.ps@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', '', '', 'Head Office', '0000-00-00', '2025-06-05 05:20:07', '2025-06-05 06:42:23', 45, 0, 21, 24, 6, 3),
 (136, 'headauth', '$2y$10$qnWlK.HG54d79HcYwrxYHOBxOdiFppleKXfTcQLAGA5igeDYU0UUi', 'Authorized', 'Officer', 'Male', 'head.auth@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', '', '', 'Head Office', '0000-00-00', '2025-06-05 05:21:17', '2025-06-05 06:42:26', 45, 0, 21, 24, 6, 5),
 (137, 'leaveofficer', '$2y$10$1T15ZX2MMhpk2txaSbuaT.wiQmfAj2Ak45xRExRGPMAe5wCMWJQEK', 'Leave Officer', 'Head Office', '', 'leave.officer@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', '', '', 'Head Office', '0000-00-00', '2025-06-05 06:08:55', '2025-06-05 06:08:55', 45, 0, 21, 24, 6, 8),
-(141, 'test', '$2y$10$wZE/.NpoUXR.Ho8srLxi/OU5fREbpxqcpa.4LxWaJT13oQJ2QQgx6', 'Test', 'Anuradha', 'Female', 'test@pannalaps.lk', '0000-00-00', 'SLT Digital Services (Pvt) Ltd, 17 H K Dharmadasa Mawatha, Colombo 2', '', '', '712205100', 'Account Assistant', '', 'Pannala Sub-Office', '2025-06-12', '2025-06-12 10:30:06', '2025-06-12 10:30:06', 45, 0, 21, 24, 1, 2),
+(141, 'test', '$2y$10$wZE/.NpoUXR.Ho8srLxi/OU5fREbpxqcpa.4LxWaJT13oQJ2QQgx6', 'Test', 'Anuradha', 'Female', 'test@pannalaps.lk', '0000-00-00', 'SLT Digital Services (Pvt) Ltd, 17 H K Dharmadasa Mawatha, Colombo 2', '', '', '712205100', 'Account Assistant', '', 'Pannala Sub-Office', '2025-06-12', '2025-06-12 10:30:06', '2025-06-12 12:30:32', 45, 11, 21, 24, 1, 2),
 (142, 'headsuboffice', '$2y$10$TDbNMUOeZcMufW7kaD8lmeUvXmtx.bQkdmeVcW5JY.b3WFSL39i9m', 'Head of', 'Suboffice', '', 'head.suboffice@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', '', '', 'Pannala Sub-Office', '2025-06-01', '2025-06-12 11:16:17', '2025-06-12 11:16:17', 45, 0, 21, 24, 6, 9),
 (143, 'authsuboffice', '$2y$10$kf8aYxlDqL8wPEhrBw.VruVKSiDwJFdFQD.8kfOT6yfcKzzCCDuxG', 'Sub Office', 'Authorized Officer', '', 'auth.suboffice@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', '', '', 'Pannala Sub-Office', '2025-06-01', '2025-06-12 11:17:26', '2025-06-12 11:17:26', 45, 0, 21, 24, 6, 6),
-(144, 'leaveofficersub', '$2y$10$Amw2wyNjxQhXZZBRDq4f6.mn6pEjP5.umbEu1Qc9T9MYtDde.sOk6', 'Leave Officer', 'Sub Office', 'Male', 'leave.officersub@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', '', '', 'Pannala Sub-Office', '0000-00-00', '2025-06-12 11:18:04', '2025-06-12 11:18:04', 45, 0, 21, 24, 6, 8);
+(144, 'leaveofficersub', '$2y$10$zuxOyKVXizpksZGcE8n8ZurcRCGBos4CGaVAIJ4dicDJMojqzk8lG', 'Leave Officer', 'Sub Office', 'Male', 'leave.officersub@pannala.ps.gov.lk', '0000-00-00', '', '', '', '0', 'SubOffice Leave Officer\r\n', '', 'Pannala Sub-Office', '0000-00-00', '2025-06-12 11:18:04', '2025-06-14 07:03:29', 45, 0, 21, 24, 6, 10);
 
 --
 -- Indexes for dumped tables
@@ -371,7 +373,7 @@ ALTER TABLE `wp_departments`
 -- AUTO_INCREMENT for table `wp_designations`
 --
 ALTER TABLE `wp_designations`
-  MODIFY `designation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `designation_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `wp_leave_notifications`
@@ -383,7 +385,7 @@ ALTER TABLE `wp_leave_notifications`
 -- AUTO_INCREMENT for table `wp_leave_request`
 --
 ALTER TABLE `wp_leave_request`
-  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
 
 --
 -- AUTO_INCREMENT for table `wp_manual_leave_logs`
