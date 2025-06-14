@@ -24,17 +24,18 @@ if (in_array($designation_id, [6, 9]) && $department_id == 6) {
         AND lr.step_1_status = 'pending'");
     $stmt->bind_param("s", $sub_office);
     $approval_step = 1;
-} elseif ($designation_id == 8 && $department_id == 9) {
-    // Step 2 Approval
-    $stmt = $conn->prepare("SELECT lr.*, u.first_name, u.last_name FROM wp_leave_request lr
-        JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
-        WHERE lr.office_type = 'sub'
-        AND lr.sub_office = ?
-        AND lr.step_1_status = 'approved'
-        AND lr.step_2_status = 'pending'");
-    $stmt->bind_param("s", $sub_office);
-    $approval_step = 2;
-} else {
+// } elseif ($designation_id == 8 && $department_id == 9) {
+//     // Step 2 Approval
+//     $stmt = $conn->prepare("SELECT lr.*, u.first_name, u.last_name FROM wp_leave_request lr
+//         JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
+//         WHERE lr.office_type = 'sub'
+//         AND lr.sub_office = ?
+//         AND lr.step_1_status = 'approved'
+//         AND lr.step_2_status = 'pending'");
+//     $stmt->bind_param("s", $sub_office);
+//     $approval_step = 2;
+// } 
+}else {
     ?>
     <!DOCTYPE html>
     <html lang="en">

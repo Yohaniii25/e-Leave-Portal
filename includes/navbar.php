@@ -70,10 +70,10 @@ elseif ($designation_id == 9 || $designation_id == 6 ){
     echo nav_link('../admin/suboffice-leave-approvals.php', 'SubOffice Leave Approvals');
     echo nav_link('../admin/suboffice-leaves.php', 'SubOffice Leave Report');
 }
-// Employee (designation_id = 2)
-elseif ($designation_id == 2) {
-    echo nav_link('/user/my-leaves.php', 'My Leave Requests');
-    echo nav_link('/user/profile.php', 'My Profile');
+// Sub-Office Leave Officer (designation_id = 8 and sub office)
+elseif ($designation_id == 10 ) {
+    echo nav_link('../admin/suboffice-step2-approvals.php', 'Approve Leaves');
+    echo nav_link('../admin/leave-officer-history.php', 'Leave History');
 }
 // Default fallback
 else {
@@ -106,30 +106,41 @@ echo '
         <div id="mobile-menu" class="md:hidden bg-blue-600 text-white p-4 hidden">
 ';
 
+// Admin (designation_id = 7) - Full access
 if ($designation_id == 7) {
-    echo '<a href="/admin/dashboard.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Dashboard</a>';
-    echo '<a href="/admin/manage-users.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Manage Users</a>';
-    echo '<a href="/admin/manage-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Manage Leaves</a>';
-    echo '<a href="/admin/reports.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Reports</a>';
-} elseif ($designation_id == 1) {
-    echo '<a href="/user/hod-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Department Leave Requests</a>';
-    echo '<a href="/user/approved-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Approved Leaves</a>';
-} elseif ($designation_id == 5 || $designation_id == 3) {
-    echo '<a href="/admin/hod-approved-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">HOD Approved Leaves</a>';
-    echo '<a href="/admin/reports.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Reports</a>';
-} elseif ($designation_id == 6) {
-    echo '<a href="/user/suboffice-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">SubOffice Leave Requests</a>';
-} elseif ($designation_id == 8) {
-    echo '<a href="/user/leave-approvals.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Leave Approvals</a>';
-    echo '<a href="/user/leave-history.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Leave History</a>';
-} elseif ($designation_id == 9) {
-    echo '<a href="/user/suboffice-dashboard.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">SubOffice Dashboard</a>';
-    echo '<a href="/user/suboffice-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">SubOffice Leave Requests</a>';
-} elseif ($designation_id == 2) {
-    echo '<a href="/user/my-leaves.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">My Leave Requests</a>';
-    echo '<a href="/user/profile.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">My Profile</a>';
-} else {
-    echo '<a href="/user/profile.php" class="block py-2 px-4 hover:bg-blue-700 rounded-md">Profile</a>';
+    echo nav_link('/admin/dashboard.php', 'Dashboard');
+    echo nav_link('/admin/manage-users.php', 'Manage Users');
+    echo nav_link('/admin/manage-leaves.php', 'Manage Leaves');
+    echo nav_link('/admin/reports.php', 'Reports');
+}
+// Head Of Department (designation_id = 1)
+elseif ($designation_id == 1) {
+    echo nav_link('../admin/hod-leaves.php', 'Department Leave Requests');
+    echo nav_link('../admin/approved-leaves.php', 'Approved Leaves');
+}
+// Head office Authorized Officer (designation_id = 5)
+elseif ($designation_id == 5 || $designation_id == 3) {
+    echo nav_link('../admin/head-of-ps-approval.php', 'HOD Approved Leaves');
+    echo nav_link('../admin/reports.php', 'Reports');
+}
+// Leave Officer (designation_id = 8)
+elseif ($designation_id == 8) {
+    echo nav_link('../admin/leave-approvals.php', 'Leave Approvals');
+    echo nav_link('../admin/leave-history.php', 'Leave History');
+}
+// Head of SubOffice (designation_id = 9)
+elseif ($designation_id == 9 || $designation_id == 6 ){
+    echo nav_link('../admin/suboffice-leave-approvals.php', 'SubOffice Leave Approvals');
+    echo nav_link('../admin/suboffice-leaves.php', 'SubOffice Leave Report');
+}
+// Sub-Office Leave Officer (designation_id = 8 and sub office)
+elseif ($designation_id == 10 ) {
+    echo nav_link('../admin/suboffice-step2-approvals.php', 'Approve Leaves');
+    echo nav_link('../admin/leave-officer-history.php', 'Leave History');
+}
+// Default fallback
+else {
+    echo nav_link('/user/profile.php', 'Profile');
 }
 
 echo '
