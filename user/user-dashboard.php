@@ -30,8 +30,9 @@ if ($stmt) {
 }
 
 // Get leave history
-$sql = "SELECT leave_type, leave_start_date, leave_end_date, number_of_days, status, created_at 
+$sql = "SELECT leave_type, leave_start_date, leave_end_date, number_of_days, status, final_status, created_at 
         FROM wp_leave_request WHERE user_id = ? ORDER BY created_at DESC";
+
 $stmt = $conn->prepare($sql);
 $leave_history = [];
 if ($stmt) {
@@ -84,24 +85,28 @@ if ($stmt) {
 <tbody>
     <?php foreach ($leave_history as $leave) : ?>
         <?php
-            // Map status codes to labels and classes
-            switch ($leave['status']) {
-                case 1:
-                    $status_label = 'Pending';
-                    $status_class = 'text-yellow-600';
-                    break;
-                case 2:
-                    $status_label = 'Approved';
-                    $status_class = 'text-green-600';
-                    break;
-                case 3:
-                    $status_label = 'Rejected';
-                    $status_class = 'text-red-600';
-                    break;
-                default:
-                    $status_label = 'Unknown';
-                    $status_class = 'text-gray-600';
-            }
+if ($leave['final_status'] === 'approved') {
+    $status_label = 'Approved';
+    $status_class = 'text-green-600';
+} else {
+    switch ($leave['status']) {
+        case 1:
+            $status_label = 'Pending';
+            $status_class = 'text-yellow-600';
+            break;
+        case 2:
+            $status_label = 'Approved';
+            $status_class = 'text-green-600';
+            break;
+        case 3:
+            $status_label = 'Rejected';
+            $status_class = 'text-red-600';
+            break;
+        default:
+            $status_label = 'Unknown';
+            $status_class = 'text-gray-600';
+    }
+}
         ?>
         <tr class="border">
             <td class="px-4 py-2"><?php echo htmlspecialchars($leave['leave_type']); ?></td>
