@@ -9,7 +9,7 @@ if (!isset($_SESSION['user']) || empty($_SESSION['user']['email'])) {
 }
 
 $email = $_SESSION['user']['email'];
-$admin_office = $_SESSION['user']['sub_office'] ?? '';  // Ensure sub_office is set
+$admin_office = $_SESSION['user']['sub_office'] ?? '';  
 
 $query = "SELECT d.designation_name 
           FROM wp_pradeshiya_sabha_users u
@@ -150,26 +150,26 @@ $user = $result->fetch_assoc();
                             </div>
                         </div>
 
-                        <div class="detail-item" style="animation-delay: 0.5s">
+                        <!-- <div class="detail-item" style="animation-delay: 0.5s">
                             <div class="flex items-center">
                                 <i class="fas fa-building text-indigo-500 mr-3 w-8 text-center"></i>
                                 <p class="text-gray-700">
                                     <strong>Department:</strong> <?php echo htmlspecialchars($user['department_name']); ?>
                                 </p>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                     <!-- Right Column -->
                     <div class="space-y-4">
-                        <div class="detail-item" style="animation-delay: 0.6s">
+                        <!-- <div class="detail-item" style="animation-delay: 0.6s">
                             <div class="flex items-center">
                                 <i class="fas fa-user-tie text-red-500 mr-3 w-8 text-center"></i>
                                 <p class="text-gray-700">
                                     <strong>Head Of Department:</strong> <?php echo htmlspecialchars($user['head_of_department']); ?>
                                 </p>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="detail-item" style="animation-delay: 0.7s">
                             <div class="flex items-center">

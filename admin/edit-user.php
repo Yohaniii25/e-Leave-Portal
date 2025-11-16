@@ -235,14 +235,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-medium mb-1">NIC <span class="text-red-500">*</span></label>
-                            <input type="text" name="nic" value="<?php echo htmlspecialchars($user['NIC']); ?>" required
+                            <label class="block text-gray-700 text-sm font-medium mb-1">NIC <span class="text-red-500"></span></label>
+                            <input type="text" name="nic" value="<?php echo htmlspecialchars($user['NIC']); ?>"
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
                         </div>
 
                         <div>
-                            <label class="block text-gray-700 text-sm font-medium mb-1">Address <span class="text-red-500">*</span></label>
-                            <textarea name="address" required
+                            <label class="block text-gray-700 text-sm font-medium mb-1">Address <span class="text-red-500"></span></label>
+                            <textarea name="address"
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition h-24"><?php echo htmlspecialchars($user['address']); ?></textarea>
                         </div>
                     </div>

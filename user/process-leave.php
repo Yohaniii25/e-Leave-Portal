@@ -2,119 +2,122 @@
 session_start();
 require '../includes/dbconfig.php';
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-require '../vendor/autoload.php';
-
-if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'Employee') !== 0) {
+if (!isset($_SESSION['user']) || $_SESSION['user']['designation'] !== 'Employee') {
     header("Location: ../index.php");
     exit();
 }
 
 $user_id = $_SESSION['user']['id'];
 $sub_office = $_SESSION['user']['sub_office'];
-$full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
-$department_id = $_SESSION['user']['department_id'] ?? '';
 
-// ✅ Determine office_type based on sub_office value
-$sub_offices = ['Pannala Sub-Office', 'Makandura Sub-Office', 'Yakkwila Sub-Office', 'Hamangalla Sub-Office'];
-$office_type = in_array($sub_office, $sub_offices) ? 'sub' : 'head';
+$leave_type = $_POST['leave_type'] ?? '';
+$start_date = $_POST['leave_start_date'] ?? '';
+$end_date = $_POST['leave_end_date'] ?? '';
+$reason = trim($_POST['reason'] ?? '');
+$substitute = trim($_POST['substitute'] ?? '');
+$is_half_day = isset($_POST['is_half_day']) ? 1 : 0;
 
-// Fetch leave balances
-$balanceQuery = $conn->prepare("SELECT casual_leave_balance, sick_leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?");
-$balanceQuery->bind_param("i", $user_id);
-$balanceQuery->execute();
-$balances = $balanceQuery->get_result()->fetch_assoc();
+if (empty($leave_type) || empty($start_date) || empty($end_date) || empty($reason)) {
+    $_SESSION['error_message'] = "All fields required.";
+    header("Location: leave_request.php");
+    exit();
+}
 
-// Fetch used leave (pending or approved)
-$used = ['Casual Leave' => 0, 'Sick Leave' => 0];
-$usageQuery = $conn->prepare("
-    SELECT leave_type, SUM(number_of_days) AS total_requested 
+if ($start_date > $end_date) {
+    $_SESSION['error_message'] = "End date cannot be before start.";
+    header("Location: leave_request.php");
+    exit();
+}
+
+$start = new DateTime($start_date);
+$end = new DateTime($end_date);
+$full_days = $start->diff($end)->days + 1;
+
+if ($is_half_day) {
+    if (!in_array($leave_type, ['Casual Leave', 'Sick Leave'])) {
+        $_SESSION['error_message'] = "Half day only for Casual/Sick.";
+        header("Location: leave_request.php");
+        exit();
+    }
+    if ($full_days > 1) {
+        $_SESSION['error_message'] = "Half day only for 1 day.";
+        header("Location: leave_request.php");
+        exit();
+    }
+    $number_of_days = 0.5;
+} else {
+    $number_of_days = $full_days;
+}
+
+// === GET CURRENT BALANCE ===
+$balanceQ = $conn->prepare("
+    SELECT casual_leave_balance, sick_leave_balance, leave_balance 
+    FROM wp_pradeshiya_sabha_users 
+    WHERE ID = ?
+");
+$balanceQ->bind_param("i", $user_id);
+$balanceQ->execute();
+$bal = $balanceQ->get_result()->fetch_assoc();
+$balanceQ->close();
+
+$casual_balance = (float)($leaveData['casual_leave_balance'] ?? 24);
+$sick_balance   = (float)($leaveData['sick_leave_balance'] ?? 21);
+$total_balance  = (float)($leaveData['leave_balance'] ?? 45);
+
+// === GET USED LEAVES (status = 2) ===
+$usedQ = $conn->prepare("
+    SELECT leave_type, SUM(number_of_days) as used 
     FROM wp_leave_request 
-    WHERE user_id = ? AND status IN (1, 2) 
+    WHERE user_id = ? AND status = 2 
     GROUP BY leave_type
 ");
-$usageQuery->bind_param("i", $user_id);
-$usageQuery->execute();
-$usageResult = $usageQuery->get_result();
-while ($row = $usageResult->fetch_assoc()) {
-    $used[$row['leave_type']] = $row['total_requested'];
+$usedQ->bind_param("i", $user_id);
+$usedQ->execute();
+$usedResult = $usedQ->get_result();
+
+$used = ['Casual Leave' => 0, 'Sick Leave' => 0, 'Duty Leave' => 0];
+while ($row = $usedResult->fetch_assoc()) {
+    $used[$row['leave_type']] = (float)$row['used'];
+}
+$usedQ->close();
+
+// === REMAINING BALANCE ===
+$rem_casual = $casual_balance - $used['Casual Leave'];
+$rem_sick   = $sick_balance   - $used['Sick Leave'];
+$rem_total  = $total_balance  - ($used['Casual Leave'] + $used['Sick Leave']); // Duty excluded
+
+// === VALIDATE ===
+if ($leave_type === 'Casual Leave' && $number_of_days > $rem_casual) {
+    $_SESSION['error_message'] = "Not enough Casual Leave. Available: " . number_format($rem_casual, 1);
+    header("Location: leave_request.php");
+    exit();
+}
+if ($leave_type === 'Sick Leave' && $number_of_days > $rem_sick) {
+    $_SESSION['error_message'] = "Not enough Sick Leave. Available: " . number_format($rem_sick, 1);
+    header("Location: leave_request.php");
+    exit();
+}
+if ($leave_type !== 'Duty Leave' && $number_of_days > $rem_total) {
+    $_SESSION['error_message'] = "Not enough total leave. Available: " . number_format($rem_total, 1);
+    header("Location: leave_request.php");
+    exit();
 }
 
-$remaining = [
-    'Casual Leave' => $balances['casual_leave_balance'] - $used['Casual Leave'],
-    'Sick Leave'   => $balances['sick_leave_balance'] - $used['Sick Leave'],
-];
+// === INSERT REQUEST ===
+$insert = $conn->prepare("
+    INSERT INTO wp_leave_request 
+    (user_id, leave_type, leave_start_date, leave_end_date, number_of_days, reason, substitute, sub_office, status, final_status) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 'pending')
+");
+$insert->bind_param("isssdsss", $user_id, $leave_type, $start_date, $end_date, $number_of_days, $reason, $substitute, $sub_office);
 
-// ✅ Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $leave_type = $_POST['leave_type'];
-    $start_date = $_POST['leave_start_date'];
-    $end_date = $_POST['leave_end_date'];
-    $reason = $_POST['reason'];
-    $substitute = $_POST['substitute'];
-
-    $start = new DateTime($start_date);
-    $end = new DateTime($end_date);
-    $days = $start->diff($end)->days + 1;
-
-    if ($leave_type !== 'Duty Leave') {
-        if (!isset($remaining[$leave_type])) {
-            $_SESSION['error_message'] = "Invalid leave type selected.";
-            header("Location: leave_request.php");
-            exit();
-        }
-
-        if ($days > $remaining[$leave_type]) {
-            $_SESSION['error_message'] = "You only have {$remaining[$leave_type]} day(s) left for {$leave_type}.";
-            header("Location: leave_request.php");
-            exit();
-        }
-    }
-
-    // ✅ Insert leave request with office_type
-    $stmt = $conn->prepare("
-        INSERT INTO wp_leave_request (
-            user_id, leave_type, leave_start_date, leave_end_date,
-            number_of_days, reason, substitute, sub_office, department_id, office_type, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-    $status = 1;
-    $stmt->bind_param(
-        "isssisssssi",
-        $user_id,
-        $leave_type,
-        $start_date,
-        $end_date,
-        $days,
-        $reason,
-        $substitute,
-        $sub_office,
-        $department_id,
-        $office_type,
-        $status
-    );
-
-    if ($stmt->execute()) {
-        $request_id = $stmt->insert_id;
-
-        // ✅ If Duty Leave, update count immediately
-        if ($leave_type === 'Duty Leave') {
-            $updateDutyLeave = $conn->prepare("
-                UPDATE wp_pradeshiya_sabha_users
-                SET duty_leave_count = duty_leave_count + ?
-                WHERE ID = ?
-            ");
-            $updateDutyLeave->bind_param("ii", $days, $user_id);
-            $updateDutyLeave->execute();
-        }
-
-        $_SESSION['success_message'] = "Leave submitted successfully.";
-        header("Location: leave_request.php");
-        exit();
-    } else {
-        $_SESSION['error_message'] = "Error submitting leave.";
-        header("Location: leave_request.php");
-        exit();
-    }
+if ($insert->execute()) {
+    $_SESSION['success_message'] = "Leave request submitted successfully.";
+} else {
+    $_SESSION['error_message'] = "Failed to submit request.";
 }
+$insert->close();
+
+header("Location: leave_request.php");
+exit();
+?>
