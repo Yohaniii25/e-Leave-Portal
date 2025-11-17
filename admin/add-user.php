@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $department_id = (int)$_POST['department_id'];
         $designation_id = (int)$_POST['designation_id'];
         $custom_designation = trim($_POST['custom_designation'] ?? '');
-        $date_of_joining = $_POST['date_of_joining'] ?? null;
+
 
         $casual_leave = isset($_POST['casual_leave_balance']) ? (int)$_POST['casual_leave_balance'] : 21;
         $sick_leave = isset($_POST['sick_leave_balance']) ? (int)$_POST['sick_leave_balance'] : 24;
@@ -99,7 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql = "INSERT INTO wp_pradeshiya_sabha_users (
     username, password, first_name, last_name, gender, email, address,
     NIC, service_number, phone_number, designation_id, department_id,
-    designation, sub_office, date_of_joining, 
+    designation, sub_office, 
     leave_balance, casual_leave_balance, sick_leave_balance
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -125,7 +125,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $department_id,
             $custom_designation,  // stored in 'designation' column
             $admin_office,
-            $date_of_joining,
             $leave_balance,
             $casual_leave,
             $sick_leave
@@ -295,12 +294,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                         </div>
 
-
-                        <div>
-                            <label class="block text-gray-700 text-sm font-medium mb-1">Date of Joining</label>
-                            <input type="date" name="date_of_joining" value="<?php echo isset($_POST['date_of_joining']) ? $_POST['date_of_joining'] : ''; ?>"
-                                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                        </div>
                     </div>
 
                     <!-- Leave Balance Section -->

@@ -63,6 +63,7 @@ $totalRemaining = $leaveBalance - $totalApproved;
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -72,6 +73,7 @@ $totalRemaining = $leaveBalance - $totalApproved;
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 </head>
+
 <body class="bg-gray-50 min-h-screen font-sans">
     <?php include('../includes/user-navbar.php'); ?>
 
@@ -87,11 +89,13 @@ $totalRemaining = $leaveBalance - $totalApproved;
             <!-- Messages -->
             <?php if (isset($_SESSION['success_message'])): ?>
                 <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
-                    <p class="text-sm text-green-700"><?= $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
+                    <p class="text-sm text-green-700"><?= $_SESSION['success_message'];
+                                                        unset($_SESSION['success_message']); ?></p>
                 </div>
             <?php elseif (isset($_SESSION['error_message'])): ?>
                 <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
-                    <p class="text-sm text-red-700"><?= $_SESSION['error_message']; unset($_SESSION['error_message']); ?></p>
+                    <p class="text-sm text-red-700"><?= $_SESSION['error_message'];
+                                                    unset($_SESSION['error_message']); ?></p>
                 </div>
             <?php endif; ?>
 
@@ -182,11 +186,6 @@ $totalRemaining = $leaveBalance - $totalApproved;
                         <small class="text-gray-500">Only for single-day Casual/Sick Leave</small>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Substitute (Optional)</label>
-                        <input type="text" id="substitute" name="substitute" class="w-full rounded-md border-gray-300 py-2 px-3 border" placeholder="Name">
-                    </div>
-
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
@@ -197,57 +196,114 @@ $totalRemaining = $leaveBalance - $totalApproved;
                             <input type="date" name="leave_end_date" id="end_date" required class="w-full rounded-md border-gray-300 py-2 px-3 border">
                         </div>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
-                        <textarea name="reason" required class="w-full rounded-md border-gray-300 py-2 px-3 border h-24" placeholder="Details..."></textarea>
-                    </div>
-
-                    <div class="flex justify-end gap-3">
-                        <button type="reset" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">Reset</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">Submit Request</button>
-                    </div>
-                </form>
             </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Substitute (Optional)</label>
+                <input type="text" id="substitute" name="substitute" class="w-full rounded-md border-gray-300 py-2 px-3 border" placeholder="Search by name…">
+                <small class="text-gray-500 block mt-1">Only available users from your department are shown.</small>
+
+                <!-- List of users on leave -->
+                <div id="on-leave-list" class="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs">
+                    <p class="text-gray-500">Select dates to see who is unavailable.</p>
+                </div>
+            </div>
+
+
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                <textarea name="reason" required class="w-full rounded-md border-gray-300 py-2 px-3 border h-24" placeholder="Details..."></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="reset" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">Reset</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">Submit Request</button>
+            </div>
+            </form>
         </div>
+    </div>
     </div>
 
     <script>
-    $(document).ready(function() {
-        const $type = $('#leave_type');
-        const $half = $('#half_day_container');
-        const $halfCheck = $('#is_half_day');
+        $(document).ready(function() {
+            const $type = $('#leave_type');
+            const $half = $('#half_day_container');
+            const $halfCheck = $('#is_half_day');
 
-        function toggleHalf() {
-            const val = $type.val();
-            if (val === 'Casual Leave' || val === 'Sick Leave') {
-                $half.removeClass('hidden');
-            } else {
-                $half.addClass('hidden');
-                $halfCheck.prop('checked', false);
-            }
-        }
-
-        $type.on('change', toggleHalf);
-        toggleHalf();
-
-        $('#leaveForm').on('submit', function(e) {
-            if ($halfCheck.is(':checked')) {
-                const s = new Date($('#start_date').val());
-                const e = new Date($('#end_date').val());
-                if ((e - s) / (1000*60*60*24) > 0) {
-                    alert('Half day only for single day.');
-                    e.preventDefault();
+            function toggleHalf() {
+                const val = $type.val();
+                if (val === 'Casual Leave' || val === 'Sick Leave') {
+                    $half.removeClass('hidden');
+                } else {
+                    $half.addClass('hidden');
+                    $halfCheck.prop('checked', false);
                 }
             }
-        });
 
-        $("#substitute").autocomplete({
-            source: 'search_users.php',
-            minLength: 2,
-            select: function(e, ui) { $("#substitute").val(ui.item.label); return false; }
+            $type.on('change', toggleHalf);
+            toggleHalf();
+
+            $('#leaveForm').on('submit', function(e) {
+                if ($halfCheck.is(':checked')) {
+                    const s = new Date($('#start_date').val());
+                    const e = new Date($('#end_date').val());
+                    if ((e - s) / (1000 * 60 * 60 * 24) > 0) {
+                        alert('Half day only for single day.');
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            $("#substitute").autocomplete({
+                minLength: 2,
+                delay: 300,
+                source: function(request, response) {
+                    const start = $('#start_date').val();
+                    const end = $('#end_date').val();
+
+                    if (!start || !end) {
+                        response([]);
+                        $('#on-leave-list').html('<p class="text-gray-500 text-sm">Select dates to see unavailable users.</p>');
+                        return;
+                    }
+
+                    $.ajax({
+                        url: 'search_users.php',
+                        data: {
+                            term: request.term,
+                            start_date: start,
+                            end_date: end
+                        },
+                        success: function(data) {
+                            response(data.suggestions || []);
+
+                            // === Show users on leave ===
+                            const list = $('#on-leave-list');
+                            if (data.on_leave && data.on_leave.length > 0) {
+                                let html = '<ul class="mt-2 space-y-1 text-xs text-red-700">';
+                                data.on_leave.forEach(u => {
+                                    html += `<li><strong>${u.name}</strong> - ${u.department} (${u.type}: ${u.dates})</li>`;
+                                });
+                                html += '</ul>';
+                                list.html(html);
+                            } else {
+                                list.html('<p class="text-gray-500 text-sm">No one is on leave in this period.</p>');
+                            }
+                        },
+                        error: function() {
+                            response([]);
+                            $('#on-leave-list').html('<p class="text-red-500 text-sm">Error loading data.</p>');
+                        }
+                    });
+                },
+                select: function(e, ui) {
+                    $("#substitute").val(ui.item.value);
+                    return false;
+                }
+            });
         });
-    });
     </script>
 </body>
+
 </html>

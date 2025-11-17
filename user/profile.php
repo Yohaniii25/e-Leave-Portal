@@ -136,10 +136,7 @@ $user = $result->fetch_assoc();
                                 <p class="font-medium text-gray-800"><?= htmlspecialchars($user['sub_office']) ?></p>
                             </div>
 
-                            <div>
-                                <p class="text-sm text-gray-500">Date of Joining</p>
-                                <p class="font-medium text-gray-800"><?= htmlspecialchars($user['date_of_joining']) ?></p>
-                            </div>
+
                         </div>
                     </div>
                 </div>

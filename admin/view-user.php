@@ -180,14 +180,6 @@ $user = $result->fetch_assoc();
                             </div>
                         </div>
 
-                        <div class="detail-item" style="animation-delay: 0.8s">
-                            <div class="flex items-center">
-                                <i class="fas fa-calendar-alt text-orange-500 mr-3 w-8 text-center"></i>
-                                <p class="text-gray-700">
-                                    <strong>Date of Joining:</strong> <?php echo htmlspecialchars($user['date_of_joining']); ?>
-                                </p>
-                            </div>
-                        </div>
 
 
                     </div>
