@@ -10,20 +10,93 @@ if (!isset($_SESSION['user'])) {
 
 $user = $_SESSION['user']; 
 
+// Handle CSV Export
+if (isset($_POST['export_csv'])) {
+    $filter_date = $_POST['filter_date'] ?? null;
+    
+    // Build query for export
+    $export_sql = "     
+        SELECT lr.*, u.first_name, u.last_name, u.email, d.department_name     
+        FROM wp_leave_request lr     
+        JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID     
+        LEFT JOIN wp_departments d ON u.department_id = d.department_id     
+        WHERE lr.step_2_status = 'approved'
+    ";
+    
+    $export_params = [];
+    $export_types = '';
+    
+    if ($filter_date) {
+        $export_sql .= " AND ? BETWEEN lr.leave_start_date AND lr.leave_end_date";
+        $export_params[] = $filter_date;
+        $export_types .= 's';
+    }
+    
+    $export_sql .= " ORDER BY lr.step_2_date DESC";
+    
+    $export_stmt = $conn->prepare($export_sql);
+    if (!empty($export_params)) {
+        $export_stmt->bind_param($export_types, ...$export_params);
+    }
+    $export_stmt->execute();
+    $export_result = $export_stmt->get_result();
+    
+    // Generate CSV
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="approved-leaves-' . date('Y-m-d') . '.csv"');
+    
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['Employee Name', 'Email', 'Department', 'Leave Type', 'Start Date', 'End Date', 'Days', 'Approved Date']);
+    
+    while ($row = $export_result->fetch_assoc()) {
+        fputcsv($output, [
+            $row['first_name'] . ' ' . $row['last_name'],
+            $row['email'],
+            $row['department_name'] ?? 'N/A',
+            $row['leave_type'],
+            date('M d, Y', strtotime($row['leave_start_date'])),
+            date('M d, Y', strtotime($row['leave_end_date'])),
+            $row['number_of_days'],
+            date('M d, Y', strtotime($row['step_2_date']))
+        ]);
+    }
+    
+    fclose($output);
+    $export_stmt->close();
+    exit;
+}
+
+// Get filter date
+$filter_date = $_POST['filter_date'] ?? null;
+
 // Fetch leaves approved at step 2 (Head of PS or Authorized Officer approval) 
 $sql = "     
     SELECT lr.*, u.first_name, u.last_name, u.email, d.department_name     
     FROM wp_leave_request lr     
     JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID     
     LEFT JOIN wp_departments d ON u.department_id = d.department_id     
-    WHERE lr.step_2_status = 'approved'     
-    ORDER BY lr.step_2_date DESC 
-";  
+    WHERE lr.step_2_status = 'approved'
+";
+
+$params = [];
+$types = '';
+
+if ($filter_date) {
+    $sql .= " AND ? BETWEEN lr.leave_start_date AND lr.leave_end_date";
+    $params[] = $filter_date;
+    $types .= 's';
+}
+
+$sql .= " ORDER BY lr.step_2_date DESC";
 
 $stmt = $conn->prepare($sql); 
 if (!$stmt) {     
     die("Prepare failed: " . $conn->error); 
 }  
+
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
 
 $stmt->execute(); 
 $result = $stmt->get_result(); 
@@ -60,6 +133,40 @@ $result = $stmt->get_result();
             <p class="text-gray-600 text-sm md:text-base">
                 Managing approved leave applications
             </p>
+        </div>
+
+        <!-- Filter & Export Section -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+            <form method="POST" class="flex flex-col md:flex-row gap-4 items-end">
+                <div class="flex-1 md:flex-initial">
+                    <label for="filter_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        Filter by Date
+                    </label>
+                    <input type="date" id="filter_date" name="filter_date" 
+                           value="<?= htmlspecialchars($filter_date ?? '') ?>"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <button type="submit" name="filter" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <i class="ph ph-funnel mr-2"></i>Filter
+                </button>
+                <button type="submit" name="export_csv" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <i class="ph ph-download mr-2"></i>Export CSV
+                </button>
+                <?php if ($filter_date): ?>
+                    <a href="reports.php" class="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors font-medium text-center">
+                        Clear Filter
+                    </a>
+                <?php endif; ?>
+            </form>
+            <?php if ($filter_date): ?>
+                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <strong>Showing employees on leave for:</strong> <?= htmlspecialchars(date('F d, Y', strtotime($filter_date))) ?>
+                    </p>
+                </div>
+            <?php endif; ?>
         </div>
 
         <?php if ($result->num_rows > 0): ?>

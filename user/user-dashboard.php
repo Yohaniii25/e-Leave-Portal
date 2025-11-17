@@ -140,7 +140,7 @@ if ($leave['final_status'] === 'approved') {
 
 
             <!-- Visit Official Website -->
-            <div class="bg-yellow-500 text-white p-6 rounded-lg shadow-lg hover:bg-yellow-600">
+            <div class="bg-green-500 text-white p-6 rounded-lg shadow-lg hover:bg-yellow-600">
                 <h2 class="text-xl font-semibold">Visit Website</h2>
                 <p class="mt-2">Check latest updates on the official website.</p>
                 <a href="https://pannalaps.lk/" target="_blank" class="text-white mt-4 inline-block">Go to Website →</a>

@@ -24,8 +24,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
     if (in_array($action, ['approve', 'reject'])) {
         $status = $action === 'approve' ? 'approved' : 'rejected';
 
-        if ($department_id == 6) {
-            // Head of PS approves/rejects at step 2
+        // Check if this is a special user (Pradeshiya Sabha Division secretary with user_id 19)
+        // Get user_id from the leave request
+        $check_sql = "SELECT user_id FROM wp_leave_request WHERE request_id = ?";
+        $check_stmt = $conn->prepare($check_sql);
+        $check_stmt->bind_param("i", $request_id);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+        $leave_row = $check_result->fetch_assoc();
+        $leave_user_id = $leave_row['user_id'] ?? 0;
+        $check_stmt->close();
+
+        // Special handling for Pradeshiya Sabha Division secretary (user_id 19)
+        if ($leave_user_id === 19 && $status === 'approved') {
+            // For special user: Head of PS approval is final approval
+            $update_sql = "
+                UPDATE wp_leave_request 
+                SET 
+                    step_2_status = ?,
+                    step_2_approver_id = ?,
+                    step_2_date = NOW(),
+                    final_status = 'approved',
+                    status = 2,
+                    rejection_remark = ?
+                WHERE request_id = ?
+            ";
+        } elseif ($leave_user_id === 19 && $status === 'rejected') {
+            // For special user rejected: set final_status to rejected
+            $update_sql = "
+                UPDATE wp_leave_request 
+                SET 
+                    step_2_status = ?,
+                    step_2_approver_id = ?,
+                    step_2_date = NOW(),
+                    final_status = 'rejected',
+                    status = 3,
+                    rejection_remark = ?
+                WHERE request_id = ?
+            ";
+        } elseif ($department_id == 6) {
+            // Normal Head of PS approval at step 2
             $update_sql = "
                 UPDATE wp_leave_request 
                 SET 
@@ -55,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
             $stmt->bind_param("sisi", $status, $approver_id, $remark_safe, $request_id);
 
             if ($stmt->execute()) {
-                header("Location: hod-leaves.php?status=success&type=$status");
+                header("Location: head-of-ps-approval.php?status=success&type=$status");
                 exit();
             } else {
                 echo "Execute failed: " . $stmt->error;
@@ -70,12 +108,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
 // Fetch leave requests based on user role
 if ($department_id == 6) {
     // Head of PS — show leaves approved by HOD but pending for Head of PS approval
+    // ALSO include special users (Pradeshiya Sabha Division secretary) whose leaves go directly to Head of PS
     $sql = "
         SELECT lr.*, u.first_name, u.last_name, u.email, d.department_name
         FROM wp_leave_request lr
         JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
         LEFT JOIN wp_departments d ON u.department_id = d.department_id
-        WHERE lr.step_1_status = 'approved' AND lr.step_2_status = 'pending'
+        WHERE lr.step_2_status = 'pending'
         ORDER BY lr.leave_start_date DESC
     ";
     $stmt = $conn->prepare($sql);
@@ -120,7 +159,7 @@ $result = $stmt->get_result();
         <h1 class="text-3xl font-semibold mb-6 text-gray-800">
             Leave Requests
             <?php if ($department_id == 6): ?>
-                <span class="text-blue-600">(Head of PS - Approve leaves approved by HOD)</span>
+                <span class="text-blue-600">(Head of PS - Final Approval Only)</span>
             <?php else: ?>
                 <span class="text-blue-600">for Department: <?= htmlspecialchars($user['department_id']) ?></span>
             <?php endif; ?>
@@ -129,8 +168,19 @@ $result = $stmt->get_result();
         <?php if (isset($_GET['status']) && $_GET['status'] === 'success'): ?>
             <div id="alert" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
                 Leave request successfully <?= htmlspecialchars($_GET['type']) ?>.
+                <?php if ($_GET['type'] === 'approved'): ?>
+                    <span class="text-sm text-green-600"> This leave has been marked as fully approved.</span>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
+
+        <!-- Info Box for Special User Leaves -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
+            <p class="text-sm text-blue-800">
+                <strong>Note:</strong> Any leaves from the Pradeshiya Sabha Division Secretary will be marked as <strong>fully approved</strong> once you approve them. 
+                Your approval is the final step for these requests.
+            </p>
+        </div>
 
         <?php if ($result->num_rows > 0): ?>
             <div class="overflow-x-auto bg-white rounded-lg shadow-md">
@@ -140,18 +190,25 @@ $result = $stmt->get_result();
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Employee Name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Department</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Leave Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Type</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Start Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">End Date</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Days</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Reason</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         <?php while ($row = $result->fetch_assoc()): ?>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 text-sm text-gray-900"><?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) ?></td>
+                            <?php $isSpecialUser = ($row['user_id'] == 19); ?>
+                            <tr class="hover:bg-gray-50 <?= $isSpecialUser ? 'bg-yellow-50' : '' ?>">
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <?= htmlspecialchars($row['first_name'] . ' ' . $row['last_name']) ?>
+                                    <?php if ($isSpecialUser): ?>
+                                        <span class="ml-2 inline-block px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">Secretary</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-500"><?= htmlspecialchars($row['email']) ?></td>
                                 <td class="px-6 py-4 text-sm text-gray-700"><?= htmlspecialchars($row['department_name'] ?? 'N/A') ?></td>
                                 <td class="px-6 py-4 text-sm text-gray-900"><?= htmlspecialchars($row['leave_type']) ?></td>
@@ -159,6 +216,13 @@ $result = $stmt->get_result();
                                 <td class="px-6 py-4 text-sm text-gray-900"><?= htmlspecialchars($row['leave_end_date']) ?></td>
                                 <td class="px-6 py-4 text-sm text-gray-900"><?= htmlspecialchars($row['number_of_days']) ?></td>
                                 <td class="px-6 py-4 text-sm text-gray-700"><?= htmlspecialchars($row['reason']) ?></td>
+                                <td class="px-6 py-4 text-sm font-semibold">
+                                    <?php if ($isSpecialUser): ?>
+                                        <span class="px-3 py-1 text-xs font-bold text-white bg-yellow-600 rounded">Final Approval</span>
+                                    <?php else: ?>
+                                        <span class="px-3 py-1 text-xs font-bold text-white bg-blue-600 rounded">Pending</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="px-6 py-4 text-sm font-semibold">
                                     <form method="POST" action="" class="space-y-2">
                                         <input type="hidden" name="request_id" value="<?= htmlspecialchars($row['request_id']) ?>" />
