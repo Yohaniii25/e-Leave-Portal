@@ -1,0 +1,40 @@
+[27-Nov-2025 11:30:15 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: mysqli::prepare() expects exactly 1 argument, 3 given in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php:63
+Stack trace:
+#0 C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php(63): mysqli->prepare('SELECT casual_l...', 'i', Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php on line 63
+[27-Nov-2025 11:30:17 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: mysqli::prepare() expects exactly 1 argument, 3 given in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php:63
+Stack trace:
+#0 C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php(63): mysqli->prepare('SELECT casual_l...', 'i', Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php on line 63
+[27-Nov-2025 11:30:18 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: mysqli::prepare() expects exactly 1 argument, 3 given in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php:63
+Stack trace:
+#0 C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php(63): mysqli->prepare('SELECT casual_l...', 'i', Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php on line 63
+[27-Nov-2025 11:30:18 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: mysqli::prepare() expects exactly 1 argument, 3 given in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php:63
+Stack trace:
+#0 C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php(63): mysqli->prepare('SELECT casual_l...', 'i', Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php on line 63
+[27-Nov-2025 11:30:18 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: mysqli::prepare() expects exactly 1 argument, 3 given in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php:63
+Stack trace:
+#0 C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php(63): mysqli->prepare('SELECT casual_l...', 'i', Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php on line 63
+[27-Nov-2025 11:30:58 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: mysqli::prepare() expects exactly 1 argument, 3 given in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php:69
+Stack trace:
+#0 C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php(69): mysqli->prepare('SELECT casual_l...', 'i', Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php on line 69
+[27-Nov-2025 11:54:59 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php:156
+Stack trace:
+#0 C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php(156): mysqli_stmt->bind_param('isssdsssisssiss...', 134, 'Sick Leave', '2025-11-27', '2025-11-27', 0.5, 'hi', 'D.M.I.U. Ratnam...', 'Head Office', NULL, 'approved', NULL, 'approved', NULL, 'pending', 'pending')
+#1 {main}
+  thrown in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php on line 156
+[27-Nov-2025 11:55:00 Europe/Berlin] PHP Fatal error:  Uncaught ArgumentCountError: The number of elements in the type definition string must match the number of bind variables in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php:156
+Stack trace:
+#0 C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php(156): mysqli_stmt->bind_param('isssdsssisssiss...', 134, 'Sick Leave', '2025-11-27', '2025-11-27', 0.5, 'hi', 'D.M.I.U. Ratnam...', 'Head Office', NULL, 'approved', NULL, 'approved', NULL, 'pending', 'pending')
+#1 {main}
+  thrown in C:\xampp\htdocs\e-Leave-Portal\user\process-leave.php on line 156

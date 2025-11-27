@@ -2,10 +2,11 @@
 session_start();
 require '../includes/dbconfig.php';
 
-if (!isset($_SESSION['user']) || strcasecmp($_SESSION['user']['designation'], 'Employee') !== 0) {
+if (!isset($_SESSION['user']) || ($_SESSION['user']['designation'] !== 'Employee' && $_SESSION['user']['designation'] !== 'Head Of Department')) {
     header("Location: ../index.php");
     exit();
 }
+
 
 $user_id = $_SESSION['user']['id'];
 $full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];

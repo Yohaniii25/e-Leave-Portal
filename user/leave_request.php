@@ -2,15 +2,16 @@
 session_start();
 require '../includes/dbconfig.php';
 
-if (!isset($_SESSION['user']) || $_SESSION['user']['designation'] !== 'Employee') {
+if (!isset($_SESSION['user']) || ($_SESSION['user']['designation'] !== 'Employee' && $_SESSION['user']['designation'] !== 'Head Of Department')) {
     header("Location: ../index.php");
     exit();
 }
 
-$user_id = $_SESSION['user']['id'];
-$sub_office = $_SESSION['user']['sub_office'];
-$full_name = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
-$department_id = $_SESSION['user']['department_id'] ?? null;
+$user_id        = $_SESSION['user']['id'];
+$designation_id = $_SESSION['user']['designation_id'] ?? 0;
+$sub_office     = $_SESSION['user']['sub_office'];
+$full_name      = $_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'];
+$department_id  = $_SESSION['user']['department_id'] ?? null;
 
 // === GET LEAVE BALANCE ===
 $leaveQuery = $conn->prepare("
@@ -27,13 +28,12 @@ if (!$leaveData) {
     die("No leave balance found for user ID: " . $user_id);
 }
 
-// === DEFINE BALANCE VARIABLES ===
 $leaveBalance       = (float)($leaveData['leave_balance'] ?? 20);
 $casual_balance     = (float)($leaveData['casual_leave_balance'] ?? 21);
-$sick_balance       = (float)($leaveData['sick_leave_balance'] ?? 24);
+$sick_balance        = (float)($leaveData['sick_leave_balance'] ?? 24);
 $dutyLeaveCount     = (int)($leaveData['duty_leave_count'] ?? 0);
 
-// === GET APPROVED LEAVES (status = 2) ===
+// === GET APPROVED LEAVES ===
 $approvedQuery = $conn->prepare("
     SELECT leave_type, SUM(number_of_days) as total_approved
     FROM wp_leave_request
@@ -50,13 +50,11 @@ while ($row = $approvedResult->fetch_assoc()) {
 }
 $approvedQuery->close();
 
-// === REMAINING BALANCE ===
 $remaining = [
     'Casual Leave' => $casual_balance - $approved['Casual Leave'],
-    'Sick Leave'   => $sick_balance   - $approved['Sick Leave'],
+    'Sick Leave'   => $sick_balance - $approved['Sick Leave'],
 ];
 
-// === TOTAL: Only Casual + Sick (Duty Leave NOT counted) ===
 $totalApproved = $approved['Casual Leave'] + $approved['Sick Leave'];
 $totalRemaining = $leaveBalance - $totalApproved;
 ?>
@@ -79,14 +77,24 @@ $totalRemaining = $leaveBalance - $totalApproved;
 
     <div class="container mx-auto py-4 md:py-8 px-4 max-w-4xl">
         <div class="bg-white p-4 md:p-8 rounded-xl shadow-lg border border-gray-100">
-            <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Request Leave
-            </h2>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Request Leave
+                </h2>
 
-            <!-- Messages -->
+                <!-- Back to Dashboard Button -->
+                <a href="<?php echo ($designation_id == 1) ? '../admin/dashboard.php' : 'user-dashboard.php'; ?>"
+                    class="mt-4 sm:mt-0 inline-flex items-center px-5 px-6 py-3 bg-gray-700 hover:bg-gray-800 text-white font-medium rounded-lg shadow transition transform hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Dashboard
+                </a>
+            </div>
+
             <?php if (isset($_SESSION['success_message'])): ?>
                 <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
                     <p class="text-sm text-green-700"><?= $_SESSION['success_message'];
@@ -168,6 +176,9 @@ $totalRemaining = $leaveBalance - $totalApproved;
             <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-700 mb-4">Submit Leave Request</h3>
                 <form method="POST" action="process-leave.php" class="space-y-4" id="leaveForm">
+                    <?php if ($designation_id == 1): ?>
+                        <input type="hidden" name="hod_direct_to_auth_officer" value="1">
+                    <?php endif; ?>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
                         <select name="leave_type" id="leave_type" required class="w-full rounded-md border-gray-300 py-2 px-3 border">
@@ -223,7 +234,7 @@ $totalRemaining = $leaveBalance - $totalApproved;
             </form>
         </div>
     </div>
-    </div>
+
 
     <script>
         $(document).ready(function() {
