@@ -88,6 +88,10 @@ class LoginController
                 strpos($designation, 'head office authorized officer') !== false) {
             header("Location: ./admin/dashboard.php");
         } 
+        elseif (strpos($designation, 'head of suboffice') !== false || 
+                strpos($designation, 'suboffice leave officer') !== false) {
+            header("Location: /e-Leave-Portal/admin/dashboard.php");
+        }
         else {
             header("Location: ./user/user-dashboard.php");
         }

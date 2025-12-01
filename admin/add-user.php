@@ -96,21 +96,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $password_hash = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
+        // FIX: 17 columns = 17 placeholders = 17 bind types
         $sql = "INSERT INTO wp_pradeshiya_sabha_users (
-    username, password, first_name, last_name, gender, email, address,
-    NIC, service_number, phone_number, designation_id, department_id,
-    designation, sub_office, 
-    leave_balance, casual_leave_balance, sick_leave_balance
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            username, password, first_name, last_name, gender, email, address,
+            NIC, service_number, phone_number, designation_id, department_id,
+            designation, sub_office, 
+            leave_balance, casual_leave_balance, sick_leave_balance
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $conn->prepare($sql);
-
         if (!$stmt) {
             throw new Exception("Prepare failed: " . $conn->error);
         }
 
+        // FIX: Exactly 17 type specifiers
         $stmt->bind_param(
-            "sssssssssiissssiii",
+            "ssssssssssiisssii",   // ← 17 types (i = int, s = string)
             $username,
             $password_hash,
             $first_name,
@@ -123,28 +124,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $phone,
             $designation_id,
             $department_id,
-            $custom_designation,  // stored in 'designation' column
+            $custom_designation,
             $admin_office,
             $leave_balance,
             $casual_leave,
             $sick_leave
         );
 
-
         if (!$stmt->execute()) {
             throw new Exception("Insert failed: " . $stmt->error);
         }
 
         $success = "User added successfully! Username: $username";
-        $_POST = [];
+        $_POST = array(); // clear form
         $stmt->close();
     } catch (Exception $e) {
         $error = $e->getMessage();
-        if ($debug) {
-            $error .= " (Debug info: " . $e->getTraceAsString() . ")";
-        }
+        if ($debug) $error .= " (Debug: " . $e->getTraceAsString() . ")";
     }
 }
+
 ?>
 
 

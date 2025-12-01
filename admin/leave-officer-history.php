@@ -105,74 +105,7 @@ function formatLeaveType($type) {
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <!-- Stats Cards (Mobile Responsive) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <?php
-            $total_approved = $result->num_rows;
-            $result->data_seek(0); // Reset result pointer
-            ?>
-            <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                <div class="flex items-center">
-                    <div class="bg-green-100 p-3 rounded-full">
-                        <i class="fas fa-check text-green-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Total Approved</p>
-                        <p class="text-2xl font-bold text-green-600"><?= $total_approved ?></p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <i class="fas fa-calendar-alt text-blue-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">This Month</p>
-                        <p class="text-2xl font-bold text-blue-600">
-                            <?php
-                            $this_month = 0;
-                            $current_month = date('Y-m');
-                            $result->data_seek(0);
-                            while ($row = $result->fetch_assoc()) {
-                                if (strpos($row['step_2_date'], $current_month) === 0) {
-                                    $this_month++;
-                                }
-                            }
-                            echo $this_month;
-                            $result->data_seek(0); // Reset again
-                            ?>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                <div class="flex items-center">
-                    <div class="bg-purple-100 p-3 rounded-full">
-                        <i class="fas fa-clock text-purple-600"></i>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Recent Activity</p>
-                        <p class="text-2xl font-bold text-purple-600">
-                            <?php
-                            $recent = 0;
-                            $week_ago = date('Y-m-d', strtotime('-7 days'));
-                            $result->data_seek(0);
-                            while ($row = $result->fetch_assoc()) {
-                                if ($row['step_2_date'] >= $week_ago) {
-                                    $recent++;
-                                }
-                            }
-                            echo $recent;
-                            $result->data_seek(0); // Reset again
-                            ?>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Table Section -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -306,21 +239,7 @@ function formatLeaveType($type) {
             <?php endif; ?>
         </div>
 
-        <!-- Footer Info -->
-        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div class="flex items-start">
-                <div class="bg-blue-100 p-2 rounded-full mr-3 mt-0.5">
-                    <i class="fas fa-info-circle text-blue-600 text-sm"></i>
-                </div>
-                <div class="text-sm">
-                    <h4 class="font-medium text-blue-900 mb-1">Leave Approval Information</h4>
-                    <p class="text-blue-700">
-                        This page displays all leave requests that you have approved as a Leave Officer. 
-                        Records are sorted by approval date, with the most recent approvals shown first.
-                    </p>
-                </div>
-            </div>
-        </div>
+
     </div>
 
     <!-- Back to Top Button -->

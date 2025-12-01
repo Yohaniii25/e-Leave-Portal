@@ -42,9 +42,9 @@ $department_name = $info['department_name'];
 $allowed = false;
 if ($designation_id == 1) {
     $allowed = true;
-} elseif (in_array($designation_id, [3, 5])) {
+} elseif (in_array($designation_id, [3, 5, 9])) {
     $allowed = true;
-} elseif (in_array($designation_id, [8])) {
+} elseif (in_array($designation_id, [8, 10])) {
     $allowed = true;
 }
 
@@ -177,50 +177,129 @@ function createCard($title, $count, $color = 'blue', $icon = '')
         <!-- Quick Actions + Overview -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-            <?php if ($designation_id == 5): 
+            <?php
+            // ===================================================================
+            // 1. Head Office Authorized Officer (Final Approval) → designation_id = 5
+            // ===================================================================
+            if ($designation_id == 5):
             ?>
-                <!-- FINAL APPROVAL (for designation_id = 5) -->
+                <!-- FINAL APPROVAL -->
                 <a href="head-of-ps-approval.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-                        <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-orange-200 group-hover:to-red-300 transition-all duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-orange-200 group-hover:to-red-300">
                             <i class="fa-solid fa-stamp text-3xl text-orange-600"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-orange-600 transition-colors">Final Approval</h3>
-                        <p class="text-sm text-gray-600 mt-2 text-center group-hover:text-gray-700">Review & approve/reject leave requests</p>
-                        <div class="mt-4 inline-flex items-center text-orange-600 font-semibold text-sm group-hover:gap-2 transition-all">
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-orange-600">Final Approval</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">Review & approve/reject leave requests</p>
+                        <div class="mt-4 inline-flex items-center text-orange-600 font-semibold text-sm">
                             Open <i class="fas fa-arrow-right ml-2"></i>
                         </div>
                     </div>
                 </a>
 
-                <!-- REPORTS (for designation_id = 5) -->
+                <!-- REPORTS -->
                 <a href="reports.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-teal-500 to-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-                        <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-teal-200 group-hover:to-cyan-300 transition-all duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-teal-200 group-hover:to-cyan-300">
                             <i class="fa-solid fa-chart-pie text-3xl text-teal-600"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-teal-600 transition-colors">Reports</h3>
-                        <p class="text-sm text-gray-600 mt-2 text-center group-hover:text-gray-700">View leave statistics and summaries</p>
-                        <div class="mt-4 inline-flex items-center text-teal-600 font-semibold text-sm group-hover:gap-2 transition-all">
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-teal-600">Reports</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">View leave statistics and summaries</p>
+                        <div class="mt-4 inline-flex items-center text-teal-600 font-semibold text-sm">
                             View <i class="fas fa-arrow-right ml-2"></i>
                         </div>
                     </div>
                 </a>
 
-            <?php else: // All other roles (HOD, Leave Officer, Admin, etc.) 
+
+            <?php
+            // ===================================================================
+            // 2. Head of Sub-Office (Step 1) → designation_id = 9
+            // ===================================================================
+            elseif ($designation_id == 9):
             ?>
-                <!-- Review Requests -->
+                <a href="suboffice-leave-approvals.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-user-check text-3xl text-indigo-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600">Step 1: Review Leaves</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">Approve/reject requests from <?= htmlspecialchars($sub_office) ?></p>
+                        <div class="mt-4 inline-flex items-center text-indigo-600 font-semibold text-sm">
+                            Open <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="suboffice-leaves.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-emerald-200 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-file-lines text-3xl text-teal-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-teal-600">Leave Report</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">All leave history of <?= htmlspecialchars($sub_office) ?></p>
+                        <div class="mt-4 inline-flex items-center text-teal-600 font-semibold text-sm">
+                            View <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+
+            <?php
+            // ===================================================================
+            // 3. Sub-Office Leave Officer (Step 2) → designation_id = 10
+            // ===================================================================
+            elseif ($designation_id == 10):
+            ?>
+                <a href="suboffice-step2-approvals.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-200 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-stamp text-3xl text-orange-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-orange-600">Step 2: Final Approval</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">Review Step-1 approved leaves</p>
+                        <div class="mt-4 inline-flex items-center text-orange-600 font-semibold text-sm">
+                            Open <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="leave-officer-history.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-200 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-history text-3xl text-green-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-green-600">Leave History</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">All approved/rejected leaves in <?= htmlspecialchars($sub_office) ?></p>
+                        <div class="mt-4 inline-flex items-center text-green-600 font-semibold text-sm">
+                            View <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+
+            <?php
+            // ===================================================================
+            // 4. All other Head Office roles (HOD, Leave Officer, Admin, etc.)
+            // ===================================================================
+            else:
+            ?>
+                <!-- Regular Head Office Review Requests -->
                 <a href="hod-leaves.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-                        <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-4">
                             <i class="fa-solid fa-list-check text-3xl text-blue-600"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Review Requests</h3>
-                        <p class="text-sm text-gray-600 mt-2 text-center group-hover:text-gray-700">Manage pending leave applications</p>
-                        <div class="mt-4 inline-flex items-center text-blue-600 font-semibold text-sm group-hover:gap-2 transition-all">
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-blue-600">Review Requests</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">Manage pending leave applications</p>
+                        <div class="mt-4 inline-flex items-center text-blue-600 font-semibold text-sm">
                             View <i class="fas fa-arrow-right ml-2"></i>
                         </div>
                     </div>
@@ -230,28 +309,28 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                 <a href="approved-leaves.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-                        <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-green-200 group-hover:to-green-300 transition-all duration-300">
+                        <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mb-4">
                             <i class="fa-solid fa-circle-check text-3xl text-green-600"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors">View Approved</h3>
-                        <p class="text-sm text-gray-600 mt-2 text-center group-hover:text-gray-700">Check approved department leaves</p>
-                        <div class="mt-4 inline-flex items-center text-green-600 font-semibold text-sm group-hover:gap-2 transition-all">
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-green-600">View Approved</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">Check approved department leaves</p>
+                        <div class="mt-4 inline-flex items-center text-green-600 font-semibold text-sm">
                             View <i class="fas fa-arrow-right ml-2"></i>
                         </div>
                     </div>
                 </a>
 
-                <!-- Apply for Leave - ONLY for Head of Department -->
+                <!-- Apply for Leave (only HODs) -->
                 <?php if ($designation_id == 1): ?>
                     <a href="../user/leave_request.php" class="group relative overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
-                        <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-                            <div class="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-purple-200 group-hover:to-indigo-300 transition-all duration-300">
+                        <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                            <div class="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-200 rounded-2xl flex items-center justify-center mb-4">
                                 <i class="fa-solid fa-plane-departure text-3xl text-purple-600"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors">Apply for Leave</h3>
-                            <p class="text-sm text-gray-600 mt-2 text-center group-hover:text-gray-700">Submit your leave application</p>
-                            <div class="mt-4 inline-flex items-center text-purple-600 font-semibold text-sm group-hover:gap-2 transition-all">
+                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-purple-600">Apply for Leave</h3>
+                            <p class="text-sm text-gray-600 mt-2 text-center">Submit your leave application</p>
+                            <div class="mt-4 inline-flex items-center text-purple-600 font-semibold text-sm">
                                 Apply Now <i class="fas fa-arrow-right ml-2"></i>
                             </div>
                         </div>
