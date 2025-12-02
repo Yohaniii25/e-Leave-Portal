@@ -31,23 +31,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
 }
 
 
-// 🟡 Only get users in department_id = 6 (Head Office)
 $query = "
-    SELECT l.*, u.first_name, u.last_name, d.department_name
+    SELECT 
+        l.*, 
+        u.first_name, 
+        u.last_name, 
+        u.sub_office,
+        d.department_name
     FROM wp_leave_request l
     JOIN wp_pradeshiya_sabha_users u ON l.user_id = u.ID
     LEFT JOIN wp_departments d ON u.department_id = d.department_id
-    WHERE l.step_1_status = 'approved' 
-      AND l.step_2_status = 'approved' 
-      AND (l.step_3_status IS NULL OR l.step_3_status = '' OR l.step_3_status = 'pending')
-    ORDER BY l.request_id DESC
+    WHERE (
+       
+        (l.step_1_status = 'approved' 
+         AND l.step_2_status = 'approved' 
+         AND l.step_3_status = 'pending')
+        OR
+        (l.step_1_status = 'approved' 
+         AND l.step_2_status = 'pending' 
+         AND l.step_2_approver_id IS NOT NULL 
+         AND l.office_type = 'sub')
+    )
+    ORDER BY l.created_at DESC
 ";
 
 
 
 $result = $conn->query($query);
 
-// 🛑 Error Check
+
 if (!$result) {
     die("Query Failed: " . $conn->error);
 }

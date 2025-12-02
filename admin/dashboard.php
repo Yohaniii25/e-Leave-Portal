@@ -247,6 +247,21 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                         </div>
                     </div>
                 </a>
+                <a href="../user/leave_request.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-indigo-200 group-hover:to-purple-300">
+                            <i class="fa-solid fa-plane-departure text-3xl text-indigo-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Apply for Leave</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center group-hover:text-gray-700">
+                            Submit your personal leave request
+                        </p>
+                        <div class="mt-4 inline-flex items-center text-indigo-600 font-semibold text-sm group-hover:gap-2 transition-all">
+                            Apply Now <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
 
 
             <?php
@@ -283,6 +298,69 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                     </div>
                 </a>
 
+            <?php
+
+            elseif ($designation_id == 3 || $designation_id == 5):
+            ?>
+                <a href="head-of-ps-approval.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-user-check text-3xl text-indigo-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600">Leave Requests</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">Approve/reject requests from <?= htmlspecialchars($sub_office) ?></p>
+                        <div class="mt-4 inline-flex items-center text-indigo-600 font-semibold text-sm">
+                            Open <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="reports.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-emerald-200 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-file-lines text-3xl text-teal-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-teal-600">Leave Report</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">All leave history of <?= htmlspecialchars($sub_office) ?></p>
+                        <div class="mt-4 inline-flex items-center text-teal-600 font-semibold text-sm">
+                            View <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+
+            <?php
+
+            elseif ($designation_id == 8):
+            ?>
+                <a href="leave-approvals.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-user-check text-3xl text-indigo-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600">Leave Requests</h3>
+                        <div class="mt-4 inline-flex items-center text-indigo-600 font-semibold text-sm">
+                            Open <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="leave-history.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-emerald-200 rounded-2xl flex items-center justify-center mb-4">
+                            <i class="fa-solid fa-file-lines text-3xl text-teal-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-teal-600">Leave Report</h3>
+                        
+                        <div class="mt-4 inline-flex items-center text-teal-600 font-semibold text-sm">
+                            View <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
 
             <?php
             // ===================================================================

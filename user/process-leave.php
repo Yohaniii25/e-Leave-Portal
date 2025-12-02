@@ -28,11 +28,13 @@ $is_half_day    = isset($_POST['is_half_day']);
 // ============== VALIDATION & DAYS ==============
 if (empty($leave_type) || empty($start_date) || empty($end_date) || empty($reason)) {
     $_SESSION['error_message'] = "Please fill all required fields.";
-    header("Location: leave_request.php"); exit();
+    header("Location: leave_request.php");
+    exit();
 }
 if ($start_date > $end_date) {
     $_SESSION['error_message'] = "End date cannot be before start date.";
-    header("Location: leave_request.php"); exit();
+    header("Location: leave_request.php");
+    exit();
 }
 
 $start = new DateTime($start_date);
@@ -42,11 +44,13 @@ $days  = $start->diff($end)->days + 1;
 if ($is_half_day) {
     if (!in_array($leave_type, ['Casual Leave', 'Sick Leave'])) {
         $_SESSION['error_message'] = "Half-day only allowed for Casual or Sick Leave.";
-        header("Location: leave_request.php"); exit();
+        header("Location: leave_request.php");
+        exit();
     }
     if ($days > 1) {
         $_SESSION['error_message'] = "Half-day can only be for a single day.";
-        header("Location: leave_request.php"); exit();
+        header("Location: leave_request.php");
+        exit();
     }
     $number_of_days = 0.5;
 } else {
@@ -80,70 +84,47 @@ $rem_annual = $annual_bal - ($used['Casual Leave'] + $used['Sick Leave']);
 
 if ($leave_type == 'Casual Leave' && $number_of_days > $rem_casual) {
     $_SESSION['error_message'] = "Not enough Casual Leave. Available: " . number_format($rem_casual, 1);
-    header("Location: leave_request.php"); exit();
+    header("Location: leave_request.php");
+    exit();
 }
 if ($leave_type == 'Sick Leave' && $number_of_days > $rem_sick) {
     $_SESSION['error_message'] = "Not enough Sick Leave. Available: " . number_format($rem_sick, 1);
-    header("Location: leave_request.php"); exit();
+    header("Location: leave_request.php");
+    exit();
 }
 if ($leave_type != 'Duty Leave' && $number_of_days > $rem_annual) {
     $_SESSION['error_message'] = "Exceeds annual leave balance. Available: " . number_format($rem_annual, 1);
-    header("Location: leave_request.php"); exit();
+    header("Location: leave_request.php");
+    exit();
 }
 
-// ============== AUTOMATIC APPROVAL FLOW ==============
+// ============== SMART APPROVAL FLOW (FINAL VERSION) ==============
 $step_1_approver_id = $step_2_approver_id = $step_3_approver_id = null;
 $office_type = ($sub_office !== 'Head Office' && !empty($sub_office)) ? 'sub' : 'head';
 
-// — SUB-OFFICE EMPLOYEE (2-STEP FLOW) —
-if ($office_type === 'sub') {
-    // Step 1: Head of Sub-Office (designation_id = 9)
-    $stmt = $conn->prepare("SELECT ID FROM wp_pradeshiya_sabha_users WHERE designation_id = 9 AND sub_office = ? LIMIT 1");
-    $stmt->bind_param("s", $sub_office);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($row = $res->fetch_assoc()) {
-        $step_1_approver_id = $row['ID'];
-    }
-    $stmt->close();
+if (in_array($designation_id, [9, 10]) && $office_type === 'sub') {
+    // Sub-Office Head or Leave Officer applies → go to Head Office Auth → Leave Officer
+    $step_1_approver_id = getHeadOfficeApprover($conn, 5);  // Auth Officer
+    $step_2_approver_id = getHeadOfficeApprover($conn, 8);  // Leave Officer
+    $step_3_approver_id = null;
 
-    // Step 2: Sub-Office Leave Officer (designation_id = 10)
-    $stmt = $conn->prepare("SELECT ID FROM wp_pradeshiya_sabha_users WHERE designation_id = 10 AND sub_office = ? LIMIT 1");
-    $stmt->bind_param("s", $sub_office);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($row = $res->fetch_assoc()) {
-        $step_2_approver_id = $row['ID'];
-    }
-    $stmt->close();
-
-    // Fallback if no sub-office approver found
-    if (!$step_1_approver_id) $step_1_approver_id = getHeadOfficeApprover($conn, 8); // Leave Officer
-    if (!$step_2_approver_id) $step_2_approver_id = getHeadOfficeApprover($conn, 5); // Auth Officer
 }
-
-// — HEAD OFFICE EMPLOYEE (3-STEP FLOW) —
+// — Regular Sub-Office Employee —
+elseif ($office_type === 'sub') {
+    $step_1_approver_id = getSubOfficeApprover($conn, $sub_office, 9);  // Sub-Office Head
+    $step_2_approver_id = getSubOfficeApprover($conn, $sub_office, 10); // Sub-Office Leave Officer
+    $step_3_approver_id = null;
+}
+// — Head Office Employee —
 else {
-    // Step 1: HOD
-    $stmt = $conn->prepare("SELECT ID FROM wp_pradeshiya_sabha_users WHERE designation_id = 1 AND department_id = (SELECT department_id FROM wp_pradeshiya_sabha_users WHERE ID = ?) LIMIT 1");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    if ($row = $res->fetch_assoc()) {
-        $step_1_approver_id = $row['ID'];
-    }
-    $stmt->close();
-
-    // Step 2: Leave Officer (Head Office)
+    $step_1_approver_id = getHOD($conn, $user_id);
     $step_2_approver_id = getHeadOfficeApprover($conn, 8);
-
-    // Step 3: Authorized Officer
     $step_3_approver_id = getHeadOfficeApprover($conn, 5);
 }
 
 // Special shortcuts
 if ($is_secretary) {
-    $step_1_approver_id = getHeadOfficeApprover($conn, 5); // Direct to Auth Officer
+    $step_1_approver_id = getHeadOfficeApprover($conn, 5);
     $step_1_status = 'approved';
     $step_2_status = 'approved';
 }
@@ -151,16 +132,40 @@ if ($designation_id == 1 && !empty($_POST['hod_direct_to_auth_officer'])) {
     $step_1_status = 'approved';
 }
 
-// Default statuses
 $step_1_status = $step_1_status ?? 'pending';
 $step_2_status = $step_2_status ?? 'pending';
 $step_3_status = $step_3_status ?? 'pending';
 $final_status  = 'pending';
 
-// Helper function
-function getHeadOfficeApprover($conn, $designation_id) {
+// ============== HELPER FUNCTIONS ==============
+function getSubOfficeApprover($conn, $sub_office, $designation_id)
+{
+    $stmt = $conn->prepare("SELECT ID FROM wp_pradeshiya_sabha_users WHERE designation_id = ? AND sub_office = ? LIMIT 1");
+    $stmt->bind_param("is", $designation_id, $sub_office);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res->fetch_assoc();
+    $stmt->close();
+    return $row['ID'] ?? null;
+}
+
+function getHeadOfficeApprover($conn, $designation_id)
+{
     $stmt = $conn->prepare("SELECT ID FROM wp_pradeshiya_sabha_users WHERE designation_id = ? AND sub_office = 'Head Office' LIMIT 1");
     $stmt->bind_param("i", $designation_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res->fetch_assoc();
+    $stmt->close();
+    return $row['ID'] ?? null;
+}
+
+function getHOD($conn, $user_id)
+{
+    $stmt = $conn->prepare("SELECT u.ID FROM wp_pradeshiya_sabha_users u
+                            JOIN wp_pradeshiya_sabha_users emp ON u.department_id = emp.department_id
+                            WHERE emp.ID = ? AND u.designation_id = 1 LIMIT 1");
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $res = $stmt->get_result();
     $row = $res->fetch_assoc();
@@ -184,11 +189,21 @@ $sql = "INSERT INTO wp_leave_request (
 $stmt = $conn->prepare($sql);
 $stmt->bind_param(
     "isssdssssisssiss",
-    $user_id, $leave_type, $start_date, $end_date, $number_of_days,
-    $reason, $substitute, $sub_office, $office_type,
-    $step_1_approver_id, $step_1_status,
-    $step_2_approver_id, $step_2_status,
-    $step_3_approver_id, $step_3_status,
+    $user_id,
+    $leave_type,
+    $start_date,
+    $end_date,
+    $number_of_days,
+    $reason,
+    $substitute,
+    $sub_office,
+    $office_type,
+    $step_1_approver_id,
+    $step_1_status,
+    $step_2_approver_id,
+    $step_2_status,
+    $step_3_approver_id,
+    $step_3_status,
     $final_status
 );
 
@@ -202,4 +217,3 @@ if ($stmt->execute()) {
 $stmt->close();
 header("Location: leave_request.php");
 exit();
-?>

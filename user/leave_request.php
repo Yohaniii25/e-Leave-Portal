@@ -2,7 +2,7 @@
 session_start();
 require '../includes/dbconfig.php';
 
-if (!isset($_SESSION['user']) || ($_SESSION['user']['designation'] !== 'Employee' && $_SESSION['user']['designation'] !== 'Head Of Department')) {
+if (!isset($_SESSION['user']) || ($_SESSION['user']['designation'] !== 'Employee' && $_SESSION['user']['designation'] !== 'Head Of Department' && $_SESSION['user']['designation'] !== 'Head of SubOffice')) {
     header("Location: ../index.php");
     exit();
 }
@@ -86,7 +86,7 @@ $totalRemaining = $leaveBalance - $totalApproved;
                 </h2>
 
                 <!-- Back to Dashboard Button -->
-                <a href="<?php echo ($designation_id == 1) ? '../admin/dashboard.php' : 'user-dashboard.php'; ?>"
+                <a href="<?php echo ($designation_id == 1 || $designation_id == 9) ? '../admin/dashboard.php' : 'user-dashboard.php'; ?>"
                     class="mt-4 sm:mt-0 inline-flex items-center px-5 px-6 py-3 bg-gray-700 hover:bg-gray-800 text-white font-medium rounded-lg shadow transition transform hover:scale-105">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

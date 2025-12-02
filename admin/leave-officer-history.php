@@ -27,13 +27,13 @@ if ($designation_id != 8 && $designation_id != 10) {
 
 // Fetch all leaves where this user approved in step 2
 $stmt = $conn->prepare("
-    SELECT lr.*, u.first_name, u.last_name
+    SELECT lr.*, u.first_name, u.last_name, u.sub_office
     FROM wp_leave_request lr
     JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
-    WHERE lr.step_2_approver_id = ?
-    ORDER BY lr.step_2_date DESC
+    WHERE lr.final_status = 'approved'
+      AND lr.office_type = 'sub'
+    ORDER BY lr.step_2_date DESC, lr.created_at DESC
 ");
-$stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 

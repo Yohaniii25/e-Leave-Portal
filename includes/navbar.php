@@ -70,7 +70,7 @@ elseif ($designation_id == 9 || $designation_id == 6 ){
     echo nav_link('../admin/suboffice-leave-approvals.php', 'SubOffice Leave Approvals');
     echo nav_link('../admin/suboffice-leaves.php', 'SubOffice Leave Report');
 }
-// Sub-Office Leave Officer (designation_id = 8 and sub office)
+// Sub-Office Leave Officer (designation_id = 10)
 elseif ($designation_id == 10 ) {
     echo nav_link('../admin/suboffice-step2-approvals.php', 'Approve Leaves');
     echo nav_link('../admin/leave-officer-history.php', 'Leave History');
