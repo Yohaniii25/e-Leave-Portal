@@ -57,7 +57,7 @@ if ($is_half_day) {
     $number_of_days = $days;
 }
 
-// ============== LEAVE BALANCE CHECK (same as yours) ==============
+// ============== LEAVE BALANCE CHECK ==============
 $stmt = $conn->prepare("SELECT casual_leave_balance, sick_leave_balance, leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -98,44 +98,55 @@ if ($leave_type != 'Duty Leave' && $number_of_days > $rem_annual) {
     exit();
 }
 
-// ============== SMART APPROVAL FLOW (FINAL VERSION) ==============
+// ============== SMART APPROVAL FLOW ==============
 $step_1_approver_id = $step_2_approver_id = $step_3_approver_id = null;
+$step_1_status = 'pending';
+$step_2_status = 'pending';
+$step_3_status = 'pending';
+$final_status  = 'pending';
+$status        = 1; // 1 = pending
+
 $office_type = ($sub_office !== 'Head Office' && !empty($sub_office)) ? 'sub' : 'head';
 
-if (in_array($designation_id, [9, 10]) && $office_type === 'sub') {
-    // Sub-Office Head or Leave Officer applies → go to Head Office Auth → Leave Officer
-    $step_1_approver_id = getHeadOfficeApprover($conn, 5);  // Auth Officer
-    $step_2_approver_id = getHeadOfficeApprover($conn, 8);  // Leave Officer
-    $step_3_approver_id = null;
-
+// === SUB-OFFICE FLOWS ===
+if ($office_type === 'sub') {
+    if (in_array($designation_id, [9, 10])) {
+        // Sub-Office Head or Sub-Office Leave Officer
+        $step_1_approver_id = getHeadOfficeApprover($conn, 5);  // Auth Officer
+        $step_2_approver_id = getHeadOfficeApprover($conn, 8);  // Leave Officer
+    } else {
+        // Regular sub-office employee
+        $step_1_approver_id = getSubOfficeApprover($conn, $sub_office, 9);   // Sub Head
+        $step_2_approver_id = getSubOfficeApprover($conn, $sub_office, 10);  // Sub Leave Officer
+    }
 }
-// — Regular Sub-Office Employee —
-elseif ($office_type === 'sub') {
-    $step_1_approver_id = getSubOfficeApprover($conn, $sub_office, 9);  // Sub-Office Head
-    $step_2_approver_id = getSubOfficeApprover($conn, $sub_office, 10); // Sub-Office Leave Officer
-    $step_3_approver_id = null;
-}
-// — Head Office Employee —
+// === HEAD OFFICE FLOWS ===
 else {
-    $step_1_approver_id = getHOD($conn, $user_id);
-    $step_2_approver_id = getHeadOfficeApprover($conn, 8);
-    $step_3_approver_id = getHeadOfficeApprover($conn, 5);
+    // Secretary (user_id = 19)
+    if ($is_secretary) {
+        $step_1_approver_id = getHeadOfficeApprover($conn, 3);   // Head of PS (135)
+        $step_2_approver_id = getHeadOfficeApprover($conn, 8);   // Leave Officer (137) - pending approval
+        $step_3_approver_id = null;
+        $step_2_status = 'pending';  // Step 2 is pending, not auto-approved
+    }
+    // Head of Department (designation_id = 1)
+    elseif ($designation_id == 1) {
+        $step_1_approver_id = 19;                               // Secretary
+        $step_2_approver_id = getHeadOfficeApprover($conn, 8);   // Leave Officer
+        $step_3_approver_id = null;
+    }
+    // Normal Head Office Employee
+    else {
+        $step_1_approver_id = getHOD($conn, $user_id);                    // Their HOD
+        $step_2_approver_id = getHeadOfficeApprover($conn, 8);            // Leave Officer
+        $step_3_approver_id = getHeadOfficeApprover($conn, 5);            // Authorized Officer
+    }
 }
 
-// Special shortcuts
-if ($is_secretary) {
-    $step_1_approver_id = getHeadOfficeApprover($conn, 5);
-    $step_1_status = 'approved';
-    $step_2_status = 'approved';
-}
+// HOD shortcut (bypass own approval)
 if ($designation_id == 1 && !empty($_POST['hod_direct_to_auth_officer'])) {
     $step_1_status = 'approved';
 }
-
-$step_1_status = $step_1_status ?? 'pending';
-$step_2_status = $step_2_status ?? 'pending';
-$step_3_status = $step_3_status ?? 'pending';
-$final_status  = 'pending';
 
 // ============== HELPER FUNCTIONS ==============
 function getSubOfficeApprover($conn, $sub_office, $designation_id)
@@ -176,19 +187,19 @@ function getHOD($conn, $user_id)
 // ============== INSERT REQUEST ==============
 $sql = "INSERT INTO wp_leave_request (
     user_id, leave_type, leave_start_date, leave_end_date, number_of_days,
-    reason, substitute, sub_office, office_type,
+    reason, substitute, sub_office, office_type, status,
     step_1_approver_id, step_1_status,
     step_2_approver_id, step_2_status,
     step_3_approver_id, step_3_status,
     final_status
 ) VALUES (
-    ?, ?, ?, ?, ?, ?, ?, ?, ?,
+    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
     ?, ?, ?, ?, ?, ?, ?
 )";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param(
-    "isssdssssisssiss",
+    "isssdssssiisssiss",
     $user_id,
     $leave_type,
     $start_date,
@@ -198,6 +209,7 @@ $stmt->bind_param(
     $substitute,
     $sub_office,
     $office_type,
+    $status,                    // Now set to 1 (pending)
     $step_1_approver_id,
     $step_1_status,
     $step_2_approver_id,
@@ -211,7 +223,7 @@ if ($stmt->execute()) {
     $_SESSION['success_message'] = "Leave request submitted successfully!";
 } else {
     error_log("Insert failed: " . $stmt->error);
-    $_SESSION['error_message'] = "Failed to submit request.";
+    $_SESSION['error_message'] = "Failed to submit request. Error: " . $stmt->error;
 }
 
 $stmt->close();

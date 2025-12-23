@@ -107,20 +107,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
 
 // Fetch leave requests based on user role
 if ($department_id == 6) {
-    // Head of PS — show leaves approved by HOD but pending for Head of PS approval
-    // ALSO include special users (Pradeshiya Sabha Division secretary) whose leaves go directly to Head of PS
+    // Head of PS — show ONLY secretary (user_id = 19) leaves that are pending at step 1
     $sql = "
         SELECT lr.*, u.first_name, u.last_name, u.email, d.department_name
         FROM wp_leave_request lr
         JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
         LEFT JOIN wp_departments d ON u.department_id = d.department_id
-        WHERE lr.step_2_status = 'pending'
+        WHERE lr.user_id = 19 
+          AND lr.step_1_status = 'pending'
+          AND lr.step_1_approver_id = ?
         ORDER BY lr.leave_start_date DESC
     ";
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         die("Prepare failed: " . $conn->error);
     }
+    $stmt->bind_param("i", $user['id']);
 } else {
     // Other departments — show pending leaves filtered by department at step 1
     $sql = "
