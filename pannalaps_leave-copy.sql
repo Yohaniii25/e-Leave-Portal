@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 23, 2025 at 01:21 AM
+-- Generation Time: Jan 02, 2026 at 12:15 AM
 -- Server version: 8.0.44
 -- PHP Version: 8.4.16
 
@@ -134,10 +134,9 @@ INSERT INTO `wp_leave_request` (`request_id`, `user_id`, `leave_type`, `leave_st
 (161, 25, 'Casual Leave', '2025-12-17', '2025-12-17', 1.0, 'privacy', 'A.M.N.D. Wijeratne', NULL, 134, 'pending', NULL, 136, 'approved', '2025-12-23 00:58:50', 136, 'pending', NULL, 'pending', '2025-12-16 10:19:46', '2025-12-23 05:58:50', 'Head Office', 'head', NULL, NULL),
 (162, 51, 'Sick Leave', '2025-12-17', '2025-12-18', 2.0, 'illness', 'shanaka', NULL, 130, 'pending', NULL, 136, 'approved', '2025-12-23 00:59:20', 136, 'pending', NULL, 'pending', '2025-12-19 08:34:04', '2025-12-23 05:59:20', 'Head Office', 'head', NULL, NULL),
 (163, 32, 'Sick Leave', '2025-12-22', '2025-12-22', 1.0, 'Sick', 'Harshani Rasika', NULL, 131, 'pending', NULL, 136, 'approved', '2025-12-23 00:58:05', 136, 'pending', NULL, 'pending', '2025-12-23 04:06:49', '2025-12-23 05:58:05', 'Head Office', 'head', NULL, NULL),
-(164, 19, 'Casual Leave', '2025-12-22', '2025-12-22', 1.0, 'sick', '', NULL, 136, 'approved', NULL, 137, 'approved', NULL, 136, 'pending', NULL, 'pending', '2025-12-23 05:35:04', '2025-12-23 05:35:04', 'Head Office', 'head', NULL, NULL),
-(165, 19, 'Sick Leave', '2025-12-23', '2025-12-23', 1.0, 'sick', 'jayasekara', NULL, 136, 'approved', NULL, 137, 'approved', NULL, 136, 'pending', NULL, 'pending', '2025-12-23 05:48:05', '2025-12-23 05:48:05', 'Head Office', 'head', NULL, NULL),
 (166, 134, 'Sick Leave', '2025-12-22', '2025-12-22', 1.0, 'sick', 'H.M.S.Shantha', NULL, 134, 'approved', NULL, 137, 'pending', NULL, 136, 'pending', NULL, 'pending', '2025-12-23 05:54:54', '2025-12-23 05:54:54', 'Head Office', 'head', NULL, NULL),
-(167, 19, 'Duty Leave', '2025-12-24', '2025-12-26', 3.0, 'test', 'Head of Pradeshiya Sabha (PS)', NULL, 136, 'approved', NULL, 137, 'approved', NULL, 136, 'pending', NULL, 'pending', '2025-12-23 06:17:51', '2025-12-23 06:17:51', 'Head Office', 'head', NULL, NULL);
+(168, 24, 'Casual Leave', '2025-12-26', '2025-12-26', 1.0, 'Personally', 'S.M.B.M. Sundarapperuma', NULL, 134, 'pending', NULL, 136, 'approved', '2025-12-23 23:31:10', 136, 'pending', NULL, 'pending', '2025-12-24 04:30:06', '2025-12-24 04:31:10', 'Head Office', 'head', NULL, NULL),
+(169, 32, 'Sick Leave', '2025-12-29', '2025-12-31', 3.0, 'Sick', '', NULL, 131, 'pending', NULL, 137, 'pending', NULL, 136, 'pending', NULL, 'pending', '2025-12-29 01:54:37', '2025-12-29 01:54:37', 'Head Office', 'head', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -398,7 +397,7 @@ ALTER TABLE `wp_leave_notifications`
 -- AUTO_INCREMENT for table `wp_leave_request`
 --
 ALTER TABLE `wp_leave_request`
-  MODIFY `request_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=168;
+  MODIFY `request_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=171;
 
 --
 -- AUTO_INCREMENT for table `wp_manual_leave_logs`

@@ -28,15 +28,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
         // Get user_id from the leave request
         $check_sql = "SELECT user_id FROM wp_leave_request WHERE request_id = ?";
         $check_stmt = $conn->prepare($check_sql);
-        $check_stmt->bind_param("i", $request_id);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
-        $leave_row = $check_result->fetch_assoc();
-        $leave_user_id = $leave_row['user_id'] ?? 0;
-        $check_stmt->close();
+        if ($check_stmt) {
+            $check_stmt->bind_param("i", $request_id);
+            $check_stmt->execute();
+            $check_result = $check_stmt->get_result();
+            $leave_row = $check_result->fetch_assoc();
+            $leave_user_id = $leave_row['user_id'] ?? 0;
+            $check_stmt->close();
+        } else {
+            die("Prepare failed: " . $conn->error);
+        }
+
+        // Only store rejection remark if rejected
+        $remark_safe = $status === 'rejected' ? $remark : null;
 
         // Special handling for Pradeshiya Sabha Division secretary (user_id 19)
-        if ($leave_user_id === 19 && $status === 'approved') {
+        if ($leave_user_id === 19) {
             // For special user: Head of PS approval is final approval
             $update_sql = "
                 UPDATE wp_leave_request 
@@ -44,35 +51,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
                     step_2_status = ?,
                     step_2_approver_id = ?,
                     step_2_date = NOW(),
-                    final_status = 'approved',
-                    status = 2,
+                    final_status = ?,
                     rejection_remark = ?
                 WHERE request_id = ?
             ";
-        } elseif ($leave_user_id === 19 && $status === 'rejected') {
-            // For special user rejected: set final_status to rejected
-            $update_sql = "
-                UPDATE wp_leave_request 
-                SET 
-                    step_2_status = ?,
-                    step_2_approver_id = ?,
-                    step_2_date = NOW(),
-                    final_status = 'rejected',
-                    status = 3,
-                    rejection_remark = ?
-                WHERE request_id = ?
-            ";
+            $stmt = $conn->prepare($update_sql);
+            if ($stmt) {
+                $stmt->bind_param("sissi", $status, $approver_id, $status, $remark_safe, $request_id);
+            }
         } elseif ($department_id == 6) {
-            // Normal Head of PS approval at step 2
+            // Normal Head of PS approval at step 2 - also update final_status
             $update_sql = "
                 UPDATE wp_leave_request 
                 SET 
                     step_2_status = ?,
                     step_2_approver_id = ?,
                     step_2_date = NOW(),
+                    final_status = ?,
                     rejection_remark = ?
                 WHERE request_id = ?
             ";
+            $stmt = $conn->prepare($update_sql);
+            if ($stmt) {
+                $stmt->bind_param("sissi", $status, $approver_id, $status, $remark_safe, $request_id);
+            }
         } else {
             // HOD approves/rejects at step 1
             $update_sql = "
@@ -84,45 +86,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
                     rejection_remark = ?
                 WHERE request_id = ?
             ";
+            $stmt = $conn->prepare($update_sql);
+            if ($stmt) {
+                $stmt->bind_param("sisi", $status, $approver_id, $remark_safe, $request_id);
+            }
         }
 
-        $stmt = $conn->prepare($update_sql);
-        if ($stmt) {
-            // Only store rejection remark if rejected
-            $remark_safe = $status === 'rejected' ? $remark : null;
-            $stmt->bind_param("sisi", $status, $approver_id, $remark_safe, $request_id);
-
+        if (isset($stmt) && $stmt) {
             if ($stmt->execute()) {
-                header("Location: head-of-ps-approval.php?status=success&type=$status");
+                $_SESSION['success_message'] = "Leave request successfully " . $status . ".";
+                if ($leave_user_id === 19 && $status === 'approved') {
+                    $_SESSION['success_message'] .= " This leave has been marked as fully approved.";
+                }
+                header("Location: head-of-ps-approval.php");
                 exit();
             } else {
-                echo "Execute failed: " . $stmt->error;
+                $_SESSION['error_message'] = "Database error: " . $stmt->error;
+                header("Location: head-of-ps-approval.php");
+                exit();
             }
             $stmt->close();
         } else {
-            echo "Prepare failed: " . $conn->error;
+            die("Prepare failed: " . $conn->error);
         }
     }
 }
 
 // Fetch leave requests based on user role
 if ($department_id == 6) {
-    // Head of PS — show ONLY secretary (user_id = 19) leaves that are pending at step 1
+    // Head of PS — show leaves approved by HOD but pending for Head of PS approval
+    // ALSO include special users (Pradeshiya Sabha Division secretary) whose leaves go directly to Head of PS
     $sql = "
         SELECT lr.*, u.first_name, u.last_name, u.email, d.department_name
         FROM wp_leave_request lr
         JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
         LEFT JOIN wp_departments d ON u.department_id = d.department_id
-        WHERE lr.user_id = 19 
-          AND lr.step_1_status = 'pending'
-          AND lr.step_1_approver_id = ?
+        WHERE lr.step_2_status = 'pending'
         ORDER BY lr.leave_start_date DESC
     ";
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         die("Prepare failed: " . $conn->error);
     }
-    $stmt->bind_param("i", $user['id']);
 } else {
     // Other departments — show pending leaves filtered by department at step 1
     $sql = "
@@ -167,13 +172,18 @@ $result = $stmt->get_result();
             <?php endif; ?>
         </h1>
 
-        <?php if (isset($_GET['status']) && $_GET['status'] === 'success'): ?>
+        <?php if (isset($_SESSION['success_message'])): ?>
             <div id="alert" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                Leave request successfully <?= htmlspecialchars($_GET['type']) ?>.
-                <?php if ($_GET['type'] === 'approved'): ?>
-                    <span class="text-sm text-green-600"> This leave has been marked as fully approved.</span>
-                <?php endif; ?>
+                <?= htmlspecialchars($_SESSION['success_message']) ?>
             </div>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error_message'])): ?>
+            <div id="alert" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <?= htmlspecialchars($_SESSION['error_message']) ?>
+            </div>
+            <?php unset($_SESSION['error_message']); ?>
         <?php endif; ?>
 
         <!-- Info Box for Special User Leaves -->
