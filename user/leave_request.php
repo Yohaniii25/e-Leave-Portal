@@ -55,6 +55,7 @@ $remaining_sick   = $sick_balance   - $approved['Sick Leave'];
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -64,6 +65,7 @@ $remaining_sick   = $sick_balance   - $approved['Sick Leave'];
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 </head>
+
 <body class="bg-gray-50 min-h-screen font-sans">
     <?php include('../includes/user-navbar.php'); ?>
 
@@ -87,11 +89,13 @@ $remaining_sick   = $sick_balance   - $approved['Sick Leave'];
 
             <?php if (isset($_SESSION['success_message'])): ?>
                 <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
-                    <p class="text-sm text-green-700"><?= $_SESSION['success_message']; unset($_SESSION['success_message']); ?></p>
+                    <p class="text-sm text-green-700"><?= $_SESSION['success_message'];
+                                                        unset($_SESSION['success_message']); ?></p>
                 </div>
             <?php elseif (isset($_SESSION['error_message'])): ?>
                 <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
-                    <p class="text-sm text-red-700"><?= $_SESSION['error_message']; unset($_SESSION['error_message']); ?></p>
+                    <p class="text-sm text-red-700"><?= $_SESSION['error_message'];
+                                                    unset($_SESSION['error_message']); ?></p>
                 </div>
             <?php endif; ?>
 
@@ -246,36 +250,55 @@ $remaining_sick   = $sick_balance   - $approved['Sick Leave'];
                 source: function(request, response) {
                     const start = $('#start_date').val();
                     const end = $('#end_date').val();
+
                     if (!start || !end) {
                         response([]);
                         $('#on-leave-list').html('<p class="text-gray-500 text-sm">Select dates first</p>');
                         return;
                     }
+
                     $.ajax({
                         url: 'search_users.php',
-                        data: { term: request.term, start_date: start, end_date: end },
+                        data: {
+                            term: request.term,
+                            start_date: start,
+                            end_date: end,
+                            department_id: current_department_id,
+                            user_id: current_user_id // exclude yourself
+                        },
                         success: function(data) {
                             response(data.suggestions || []);
+
                             const list = $('#on-leave-list');
                             if (data.on_leave && data.on_leave.length > 0) {
-                                let html = '<p class="font-medium text-red-700 mb-1">On leave during this period:</p><ul class="list-disc list-inside space-y-1">';
+                                let html = '<p class="font-medium text-red-700 mb-1">On leave during this period:</p><ul class="list-disc list-inside space-y-1 text-sm">';
                                 data.on_leave.forEach(u => {
-                                    html += `<li><strong>${u.name}</strong> (${u.type}: ${u.dates})</li>`;
+                                    html += `<li><strong>${u.name}</strong> - ${u.type}: ${u.dates}</li>`;
                                 });
                                 html += '</ul>';
                                 list.html(html);
                             } else {
-                                list.html('<p class="text-green-600 text-sm">✓ All staff available</p>');
+                                list.html('<p class="text-green-600 text-sm">✓ No one in your department is on leave</p>');
                             }
+                        },
+                        error: function() {
+                            response([]);
+                            $('#on-leave-list').html('<p class="text-red-500 text-sm">Error loading data.</p>');
                         }
                     });
                 },
                 select: function(e, ui) {
-                    $(this).val(ui.item.value);
+                    $("#substitute").val(ui.item.value);
                     return false;
                 }
             });
         });
     </script>
+
+    <script>
+        const current_user_id = <?= json_encode($user_id) ?>;
+        const current_department_id = <?= json_encode($department_id) ?>;
+    </script>
 </body>
+
 </html>

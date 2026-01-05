@@ -1,5 +1,5 @@
 <?php
-session_start();                     // <-- Needed for $_SESSION['user']
+session_start();                    
 require '../includes/dbconfig.php';
 
 if (!isset($_GET['term']) || trim($_GET['term']) === '') {
@@ -48,7 +48,7 @@ if ($start_date && $end_date) {
         AND u.ID NOT IN (
             SELECT lr.user_id
             FROM wp_leave_request lr
-            WHERE lr.status IN (1,2)
+            WHERE lr.final_status = 'approved'
               AND lr.leave_start_date <= ?
               AND lr.leave_end_date   >= ?
         )
@@ -93,7 +93,7 @@ if ($start_date && $end_date) {
         FROM wp_leave_request lr
         JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID
         LEFT JOIN wp_departments d ON u.department_id = d.department_id
-        WHERE lr.status IN (1,2)
+        WHERE lr.final_status = 'approved'
           AND lr.leave_start_date <= ?
           AND lr.leave_end_date   >= ?
           AND u.sub_office = ?

@@ -16,7 +16,8 @@ $user_id        = $user['id'];
 $designation_id = $user['designation_id'] ?? 0;
 $department_id  = $user['department_id'] ?? null;
 $sub_office     = $user['sub_office'] ?? 'Head Office';
-$is_secretary   = ($user_id == 19); // Secretary - special 2-step flow
+$is_secretary   = ($user_id == 19); // Secretary
+$is_hod         = ($designation_id == 1); // Head of Department
 
 // ============== FORM DATA ==============
 $leave_type     = trim($_POST['leave_type'] ?? '');
@@ -25,7 +26,7 @@ $end_date       = $_POST['leave_end_date'] ?? '';
 $reason         = trim($_POST['reason'] ?? '');
 $substitute     = trim($_POST['substitute'] ?? '');
 $is_half_day    = isset($_POST['is_half_day']);
-$hod_direct     = isset($_POST['hod_direct_to_auth_officer']); // From leave_request.php for HODs
+$hod_direct     = isset($_POST['hod_direct_to_auth_officer']);
 
 // ============== VALIDATION ==============
 if (empty($leave_type) || empty($start_date) || empty($end_date) || empty($reason)) {
@@ -40,19 +41,19 @@ if ($start_date > $end_date) {
     exit();
 }
 
-// ============== CALCULATE NUMBER OF DAYS ==============
+// ============== CALCULATE DAYS ==============
 $start = new DateTime($start_date);
 $end   = new DateTime($end_date);
-$days  = $start->diff($end)->days + 1; // Inclusive count
+$days  = $start->diff($end)->days + 1;
 
 if ($is_half_day) {
     if (!in_array($leave_type, ['Casual Leave', 'Sick Leave'])) {
-        $_SESSION['error_message'] = "Half-day is only allowed for Casual or Sick Leave.";
+        $_SESSION['error_message'] = "Half-day only allowed for Casual or Sick Leave.";
         header("Location: leave_request.php");
         exit();
     }
     if ($days > 1) {
-        $_SESSION['error_message'] = "Half-day can only be requested for a single day.";
+        $_SESSION['error_message'] = "Half-day can only be for a single day.";
         header("Location: leave_request.php");
         exit();
     }
@@ -61,12 +62,8 @@ if ($is_half_day) {
     $number_of_days = $days;
 }
 
-// ============== FETCH CURRENT BALANCES ==============
-$stmt = $conn->prepare("
-    SELECT casual_leave_balance, sick_leave_balance 
-    FROM wp_pradeshiya_sabha_users 
-    WHERE ID = ?
-");
+// ============== BALANCE CHECK ==============
+$stmt = $conn->prepare("SELECT casual_leave_balance, sick_leave_balance FROM wp_pradeshiya_sabha_users WHERE ID = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $bal = $stmt->get_result()->fetch_assoc();
@@ -75,13 +72,7 @@ $stmt->close();
 $casual_balance = (float)($bal['casual_leave_balance'] ?? 21);
 $sick_balance   = (float)($bal['sick_leave_balance'] ?? 24);
 
-// ============== CALCULATE USED APPROVED LEAVES ==============
-$stmt = $conn->prepare("
-    SELECT leave_type, SUM(number_of_days) AS used 
-    FROM wp_leave_request 
-    WHERE user_id = ? AND final_status = 'approved' 
-    GROUP BY leave_type
-");
+$stmt = $conn->prepare("SELECT leave_type, SUM(number_of_days) as used FROM wp_leave_request WHERE user_id = ? AND final_status = 'approved' GROUP BY leave_type");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $res = $stmt->get_result();
@@ -96,56 +87,46 @@ $stmt->close();
 $remaining_casual = $casual_balance - $used_casual;
 $remaining_sick   = $sick_balance   - $used_sick;
 
-// ============== BALANCE VALIDATION ==============
 if ($leave_type === 'Casual Leave' && $number_of_days > $remaining_casual) {
-    $_SESSION['error_message'] = "Insufficient Casual Leave. Available: " . number_format($remaining_casual, 1) . " days.";
+    $_SESSION['error_message'] = "Not enough Casual Leave. Available: " . number_format($remaining_casual, 1);
     header("Location: leave_request.php");
     exit();
 }
-
 if ($leave_type === 'Sick Leave' && $number_of_days > $remaining_sick) {
-    $_SESSION['error_message'] = "Insufficient Sick Leave. Available: " . number_format($remaining_sick, 1) . " days.";
+    $_SESSION['error_message'] = "Not enough Sick Leave. Available: " . number_format($remaining_sick, 1);
     header("Location: leave_request.php");
     exit();
 }
 
-// Duty Leave has no limit — only tracked
-
-// ============== DETERMINE OFFICE TYPE ==============
+// ============== APPROVAL WORKFLOW ==============
 $office_type = ($sub_office !== 'Head Office' && !empty($sub_office)) ? 'sub' : 'head';
 
-// ============== KEY APPROVER IDs (Hardcoded for reliability) ==============
+// Key approvers
 $head_ps_id         = 135; // Head of Pradeshiya Sabha
-$auth_officer_id    = 136; // Head Office Authorized Officer
-$leave_officer_id   = 137; // Leave Officer (final for most flows)
+$auth_officer_id    = 136; // Authorized Officer
+$leave_officer_id   = 137; // Leave Officer
+$secretary_id       = 19;  // Secretary
 
-// ============== DEFAULT STATUS VALUES ==============
+// Default
 $step_1_approver_id = $step_2_approver_id = $step_3_approver_id = null;
-$step_1_status = 'pending';
-$step_2_status = 'pending';
-$step_3_status = 'pending';
-$final_status  = 'pending'; // ← Always 'pending' on new submission
+$step_1_status = $step_2_status = $step_3_status = 'pending';
+$final_status  = 'pending';
 
-// ============== APPROVAL WORKFLOW LOGIC ==============
-
-// 1. SECRETARY (user_id = 19) → Strict 2-step process
-if ($is_secretary) {
-    $step_1_approver_id = $head_ps_id;        // Step 1: Head of PS
-    $step_2_approver_id = $leave_officer_id;  // Step 2: Leave Officer (final)
+// 1. HEAD OF DEPARTMENT (designation_id = 1) → goes directly to Secretary (final)
+if ($is_hod) {
+    $step_1_approver_id = $secretary_id;   // Secretary approves
+    $step_2_approver_id = null;
     $step_3_approver_id = null;
 }
 
-// 2. HEAD OF DEPARTMENT (designation_id = 1)
-elseif ($designation_id == 1) {
-    if ($hod_direct) {
-        $step_1_status = 'approved'; // HOD skips own approval
-    }
-    $step_1_approver_id = $auth_officer_id;
+// 2. SECRETARY (user_id = 19) → 2-step: Head of PS → Leave Officer
+elseif ($is_secretary) {
+    $step_1_approver_id = $head_ps_id;
     $step_2_approver_id = $leave_officer_id;
     $step_3_approver_id = null;
 }
 
-// 3. SUB-OFFICE HEAD OR SUB-OFFICE LEAVE OFFICER (designation 9 or 10)
+// 3. SUB-OFFICE HEAD OR LEAVE OFFICER
 elseif (in_array($designation_id, [9, 10]) && $office_type === 'sub') {
     $step_1_approver_id = $auth_officer_id;
     $step_2_approver_id = $leave_officer_id;
@@ -156,7 +137,7 @@ elseif (in_array($designation_id, [9, 10]) && $office_type === 'sub') {
 elseif ($office_type === 'sub') {
     $step_1_approver_id = getSubOfficeHead($conn, $sub_office);
     $step_2_approver_id = $auth_officer_id;
-    $step_3_approver_id = null;
+    $step_3_approver_id = $leave_officer_id;
 }
 
 // 5. REGULAR HEAD OFFICE EMPLOYEE
@@ -175,7 +156,7 @@ function getSubOfficeHead($conn, $sub_office) {
     $res = $stmt->get_result();
     $row = $res->fetch_assoc();
     $stmt->close();
-    return $row['ID'] ?? 136; // fallback to main Authorized Officer
+    return $row['ID'] ?? 136;
 }
 
 function getDepartmentHead($conn, $department_id) {
@@ -189,7 +170,7 @@ function getDepartmentHead($conn, $department_id) {
     return $row['ID'] ?? null;
 }
 
-// ============== INSERT INTO DATABASE ==============
+// ============== INSERT REQUEST ==============
 $sql = "INSERT INTO wp_leave_request (
     user_id, leave_type, leave_start_date, leave_end_date, number_of_days,
     reason, substitute, sub_office, office_type, department_id,
@@ -226,15 +207,17 @@ $stmt->bind_param(
 
 if ($stmt->execute()) {
     $msg = "Leave request submitted successfully!";
-    if ($is_secretary) {
-        $msg .= " It will be reviewed by the Head of Pradeshiya Sabha first.";
+    if ($is_hod) {
+        $msg .= " It has been sent to the Secretary for final approval.";
+    } elseif ($is_secretary) {
+        $msg .= " It has been sent to the Head of Pradeshiya Sabha.";
     } else {
         $msg .= " Awaiting approval.";
     }
     $_SESSION['success_message'] = $msg;
 } else {
-    error_log("Leave request failed: " . $stmt->error);
-    $_SESSION['error_message'] = "Failed to submit request. Please try again later.";
+    error_log("Insert failed: " . $stmt->error);
+    $_SESSION['error_message'] = "Failed to submit request.";
 }
 
 $stmt->close();
