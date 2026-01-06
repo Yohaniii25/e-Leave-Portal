@@ -1,17 +1,17 @@
 <?php
 session_start();
-require "../includes/dbconfig.php";
+require '../includes/dbconfig.php';
 
 if (!isset($_SESSION['user'])) {
     header("Location: ../index.php");
     exit();
 }
 
-$user           = $_SESSION['user'];
-$user_id        = $user['id'];
+$user = $_SESSION['user'];
+$user_id = $user['id'];
 $designation_id = $user['designation_id'] ?? 0;
-$department_id  = $user['department_id'] ?? null;
-$sub_office     = $user['sub_office'] ?? null;
+$department_id = $user['department_id'] ?? null;
+$sub_office = $user['sub_office'] ?? null;
 
 /* ========================================
    FETCH USER INFO
@@ -39,32 +39,21 @@ $department_name = $info['department_name'];
 /* ========================================
    ACCESS CONTROL
    ======================================== */
-$allowed = false;
-if ($designation_id == 1) {
-    $allowed = true;
-} elseif (in_array($designation_id, [3, 5, 9])) {
-    $allowed = true;
-} elseif (in_array($designation_id, [8, 10])) {
-    $allowed = true;
-}
-
-if (!$allowed) {
+$allowed_designations = [1, 3, 5, 8, 9, 10];
+if (!in_array($designation_id, $allowed_designations)) {
     die("Access denied. You are not authorized to view this dashboard.");
 }
 
-/* ========================================
-   IS ADMIN?
-   ======================================== */
 $is_admin = ($designation_id == 1);
 
 /* ========================================
-   COUNT LEAVES BY DEPARTMENT
+   COUNT LEAVES BY DEPARTMENT (Fixed to use final_status)
    ======================================== */
 function countDepartmentLeaves($conn, $department_id, $sub_office, $is_admin = false)
 {
     $counts = ['pending' => 0, 'approved' => 0, 'rejected' => 0, 'total' => 0];
 
-    $sql = "SELECT lr.status, COUNT(*) AS count FROM wp_leave_request lr";
+    $sql = "SELECT lr.final_status, COUNT(*) AS count FROM wp_leave_request lr";
     $where = [];
     $params = [];
     $types = '';
@@ -77,7 +66,7 @@ function countDepartmentLeaves($conn, $department_id, $sub_office, $is_admin = f
             $params[] = $department_id;
             $types .= 'i';
         }
-        if ($sub_office) {
+        if ($sub_office && $sub_office !== 'Head Office') {
             $where[] = "u.sub_office = ?";
             $params[] = $sub_office;
             $types .= 's';
@@ -88,10 +77,12 @@ function countDepartmentLeaves($conn, $department_id, $sub_office, $is_admin = f
         $sql .= " WHERE " . implode(' AND ', $where);
     }
 
-    $sql .= " GROUP BY lr.status";
+    $sql .= " GROUP BY lr.final_status";
 
     $stmt = $conn->prepare($sql);
-    if (!$stmt) return $counts;
+    if (!$stmt) {
+        return $counts;
+    }
 
     if (!empty($params)) {
         $stmt->bind_param($types, ...$params);
@@ -101,14 +92,14 @@ function countDepartmentLeaves($conn, $department_id, $sub_office, $is_admin = f
 
     while ($row = $result->fetch_assoc()) {
         $counts['total'] += $row['count'];
-        switch ($row['status']) {
-            case 1:
-                $counts['pending']   = $row['count'];
+        switch ($row['final_status']) {
+            case 'pending':
+                $counts['pending'] = $row['count'];
                 break;
-            case 2:
-                $counts['approved']  = $row['count'];
+            case 'approved':
+                $counts['approved'] = $row['count'];
                 break;
-            case 3:
+            case 'rejected':
                 $counts['rejected'] = $row['count'];
                 break;
         }
@@ -152,20 +143,17 @@ function createCard($title, $count, $color = 'blue', $icon = '')
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($role) ?> Dashboard - Pannala Pradeshiya Sabha</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
 <body class="bg-gray-100">
     <?php include "../includes/navbar.php"; ?>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -176,21 +164,20 @@ function createCard($title, $count, $color = 'blue', $icon = '')
 
         <!-- Quick Actions + Overview -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
             <?php
             // ===================================================================
-            // 1. Head Office Authorized Officer (Final Approval) → designation_id = 5
+            // 1. Authorized Officer (designation_id = 5)
             // ===================================================================
             if ($designation_id == 5):
             ?>
-                <!-- FINAL APPROVAL -->
+                <!-- STEP 2 APPROVAL -->
                 <a href="head-of-auth-approval.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
                         <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-orange-200 group-hover:to-red-300">
                             <i class="fa-solid fa-stamp text-3xl text-orange-600"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-orange-600">Final Approval</h3>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-orange-600">Step 2 Approval</h3>
                         <p class="text-sm text-gray-600 mt-2 text-center">Review & approve/reject leave requests</p>
                         <div class="mt-4 inline-flex items-center text-orange-600 font-semibold text-sm">
                             Open <i class="fas fa-arrow-right ml-2"></i>
@@ -213,10 +200,43 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                     </div>
                 </a>
 
+            <?php
+            // ===================================================================
+            // 2. Head of PS (designation_id = 3)
+            // ===================================================================
+            elseif ($designation_id == 3):
+            ?>
+                <a href="head-of-ps-approval.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-orange-200 group-hover:to-red-300">
+                            <i class="fa-solid fa-stamp text-3xl text-orange-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-orange-600">Final Approval</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">Review & approve/reject leave requests</p>
+                        <div class="mt-4 inline-flex items-center text-orange-600 font-semibold text-sm">
+                            Open <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="reports.php" class="group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-teal-500 to-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
+                        <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-teal-200 group-hover:to-cyan-300">
+                            <i class="fa-solid fa-chart-pie text-3xl text-teal-600"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-teal-600">Reports</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">View leave statistics and summaries</p>
+                        <div class="mt-4 inline-flex items-center text-teal-600 font-semibold text-sm">
+                            View <i class="fas fa-arrow-right ml-2"></i>
+                        </div>
+                    </div>
+                </a>
 
             <?php
             // ===================================================================
-            // 2. Head of Sub-Office (Step 1) → designation_id = 9
+            // 3. Head of Sub-Office (designation_id = 9)
             // ===================================================================
             elseif ($designation_id == 9):
             ?>
@@ -247,26 +267,24 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                         </div>
                     </div>
                 </a>
+
                 <a href="../user/leave_request.php" class="group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    <div class="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-indigo-200 group-hover:to-purple-300">
-                            <i class="fa-solid fa-plane-departure text-3xl text-indigo-600"></i>
+                        <div class="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-purple-200 group-hover:to-indigo-300">
+                            <i class="fa-solid fa-plane-departure text-3xl text-purple-600"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Apply for Leave</h3>
-                        <p class="text-sm text-gray-600 mt-2 text-center group-hover:text-gray-700">
-                            Submit your personal leave request
-                        </p>
-                        <div class="mt-4 inline-flex items-center text-indigo-600 font-semibold text-sm group-hover:gap-2 transition-all">
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-purple-600">Apply for Leave</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">Submit your personal leave request</p>
+                        <div class="mt-4 inline-flex items-center text-purple-600 font-semibold text-sm">
                             Apply Now <i class="fas fa-arrow-right ml-2"></i>
                         </div>
                     </div>
                 </a>
 
-
             <?php
             // ===================================================================
-            // 3. Sub-Office Leave Officer (Step 2) → designation_id = 10
+            // 4. Sub-Office Leave Officer (designation_id = 10)
             // ===================================================================
             elseif ($designation_id == 10):
             ?>
@@ -299,40 +317,9 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                 </a>
 
             <?php
-
-            elseif ($designation_id == 3 ):
-            ?>
-                <a href="head-of-ps-approval.php" class="group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
-                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-                        <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-2xl flex items-center justify-center mb-4">
-                            <i class="fa-solid fa-user-check text-3xl text-indigo-600"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600">Leave Requests</h3>
-                        <p class="text-sm text-gray-600 mt-2 text-center">Approve/reject requests from <?= htmlspecialchars($sub_office) ?></p>
-                        <div class="mt-4 inline-flex items-center text-indigo-600 font-semibold text-sm">
-                            Open <i class="fas fa-arrow-right ml-2"></i>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="reports.php" class="group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
-                    <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
-                        <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-emerald-200 rounded-2xl flex items-center justify-center mb-4">
-                            <i class="fa-solid fa-file-lines text-3xl text-teal-600"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-teal-600">Leave Report</h3>
-                        <p class="text-sm text-gray-600 mt-2 text-center">All leave history of <?= htmlspecialchars($sub_office) ?></p>
-                        <div class="mt-4 inline-flex items-center text-teal-600 font-semibold text-sm">
-                            View <i class="fas fa-arrow-right ml-2"></i>
-                        </div>
-                    </div>
-                </a>
-
-
-            <?php
-
+            // ===================================================================
+            // 5. Leave Officer (designation_id = 8)
+            // ===================================================================
             elseif ($designation_id == 8):
             ?>
                 <a href="leave-approvals.php" class="group relative overflow-hidden">
@@ -341,7 +328,8 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                         <div class="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-2xl flex items-center justify-center mb-4">
                             <i class="fa-solid fa-user-check text-3xl text-indigo-600"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600">Leave Requests</h3>
+                        <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600">Final Leave Approvals</h3>
+                        <p class="text-sm text-gray-600 mt-2 text-center">Final approval for all leaves</p>
                         <div class="mt-4 inline-flex items-center text-indigo-600 font-semibold text-sm">
                             Open <i class="fas fa-arrow-right ml-2"></i>
                         </div>
@@ -355,7 +343,7 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                             <i class="fa-solid fa-file-lines text-3xl text-teal-600"></i>
                         </div>
                         <h3 class="text-lg font-bold text-gray-900 group-hover:text-teal-600">Leave Report</h3>
-                        
+                        <p class="text-sm text-gray-600 mt-2 text-center">Full leave history</p>
                         <div class="mt-4 inline-flex items-center text-teal-600 font-semibold text-sm">
                             View <i class="fas fa-arrow-right ml-2"></i>
                         </div>
@@ -364,11 +352,10 @@ function createCard($title, $count, $color = 'blue', $icon = '')
 
             <?php
             // ===================================================================
-            // 4. All other Head Office roles (HOD, Leave Officer, Admin, etc.)
+            // 6. HOD and fallback
             // ===================================================================
             else:
             ?>
-                <!-- Regular Head Office Review Requests -->
                 <a href="hod-leaves.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
@@ -383,7 +370,6 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                     </div>
                 </a>
 
-                <!-- View Approved -->
                 <a href="approved-leaves.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
@@ -398,7 +384,6 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                     </div>
                 </a>
 
-                <!-- Apply for Leave (only HODs) -->
                 <?php if ($designation_id == 1): ?>
                     <a href="../user/leave_request.php" class="group relative overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
@@ -414,12 +399,16 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                         </div>
                     </a>
                 <?php endif; ?>
-
             <?php endif; ?>
-
         </div>
 
+        <!-- Leave Counts Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-12">
+            <?= createCard('Total Leaves', $leaveCounts['total'], 'blue', '<i class="fas fa-calendar-alt text-2xl text-blue-600"></i>') ?>
+            <?= createCard('Pending', $leaveCounts['pending'], 'yellow', '<i class="fas fa-clock text-2xl text-yellow-600"></i>') ?>
+            <?= createCard('Approved', $leaveCounts['approved'], 'green', '<i class="fas fa-check-circle text-2xl text-green-600"></i>') ?>
+            <?= createCard('Rejected', $leaveCounts['rejected'], 'red', '<i class="fas fa-times-circle text-2xl text-red-600"></i>') ?>
+        </div>
     </div>
 </body>
-
 </html>
