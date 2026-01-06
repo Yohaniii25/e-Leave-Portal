@@ -17,17 +17,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_id'], $_POST[
     if ($action === 'approve') {
         $final_status = 'approved';
         $step_3_status = 'approved';
-        $status = 2;
     } elseif ($action === 'reject') {
         $final_status = 'rejected';
         $step_3_status = 'rejected';
-        $status = 3;
     } else {
         die("Invalid action.");
     }
 
-    $stmt = $conn->prepare("UPDATE wp_leave_request SET step_3_status = ?, final_status = ?, status = ? WHERE request_id = ?");
-    $stmt->bind_param("ssii", $step_3_status, $final_status, $status, $leaveId);
+    $stmt = $conn->prepare("UPDATE wp_leave_request SET step_3_status = ?, final_status = ? WHERE request_id = ?");
+    if (!$stmt) {
+        die("Prepare failed: " . $conn->error);
+    }
+    $stmt->bind_param("ssi", $step_3_status, $final_status, $leaveId);
     $stmt->execute();
     $stmt->close();
 }

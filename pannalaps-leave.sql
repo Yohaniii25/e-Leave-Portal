@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 05, 2026 at 09:40 AM
+-- Generation Time: Jan 06, 2026 at 06:10 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 8.0.3
 
@@ -126,7 +126,8 @@ INSERT INTO `wp_leave_request` (`request_id`, `user_id`, `leave_type`, `leave_st
 (172, 19, 'Duty Leave', '2026-01-02', '2026-01-03', '2.0', 'hi', 'Head of Pradeshiya Sabha (PS)', 135, 'pending', NULL, 135, 'rejected', '2026-01-02 14:05:51', NULL, 'pending', NULL, 'rejected', '2026-01-02 06:29:39', '2026-01-02 08:43:53', 'Head Office', 'head', 'no', 6),
 (173, 19, 'Sick Leave', '2026-01-02', '2026-01-02', '0.5', 'hi', 'Head of Pradeshiya Sabha (PS)', 135, 'pending', NULL, 135, 'approved', '2026-01-02 13:02:21', NULL, 'pending', NULL, 'approved', '2026-01-02 06:33:15', '2026-01-02 07:32:21', 'Head Office', 'head', NULL, 6),
 (176, 19, 'Casual Leave', '2026-01-12', '2026-01-12', '1.0', 'hi', 'head of ps', 135, 'pending', NULL, 135, 'approved', '2026-01-02 14:17:56', NULL, 'pending', NULL, 'approved', '2026-01-02 08:45:59', '2026-01-02 08:47:56', 'Head Office', 'head', NULL, 6),
-(179, 130, 'Casual Leave', '2026-01-06', '2026-01-06', '0.5', 'hi', 'Mrs. W.A.D.P. Wanniarachchi', 19, 'pending', NULL, NULL, 'pending', NULL, NULL, 'pending', NULL, 'pending', '2026-01-05 08:03:59', '2026-01-05 08:03:59', 'Head Office', 'head', NULL, 1);
+(179, 130, 'Casual Leave', '2026-01-06', '2026-01-06', '0.5', 'hi', 'Mrs. W.A.D.P. Wanniarachchi', 19, 'approved', '2026-01-05 14:17:47', NULL, 'pending', NULL, NULL, 'pending', NULL, 'approved', '2026-01-05 08:03:59', '2026-01-05 08:47:47', 'Head Office', 'head', NULL, 1),
+(180, 130, 'Sick Leave', '2026-01-06', '2026-01-06', '0.5', 'hi', 'Mr. Chinthaka Saman Kumara', 19, 'approved', '2026-01-05 15:05:40', NULL, 'pending', NULL, NULL, 'pending', NULL, 'approved', '2026-01-05 09:34:31', '2026-01-05 09:35:40', 'Head Office', 'head', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -387,7 +388,7 @@ ALTER TABLE `wp_leave_notifications`
 -- AUTO_INCREMENT for table `wp_leave_request`
 --
 ALTER TABLE `wp_leave_request`
-  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=180;
+  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=181;
 
 --
 -- AUTO_INCREMENT for table `wp_manual_leave_logs`

@@ -56,9 +56,13 @@ elseif ($designation_id == 1) {
     echo nav_link('../admin/approved-leaves.php', 'Approved Leaves');
 }
 // Head office Authorized Officer (designation_id = 5)
-elseif ($designation_id == 5 || $designation_id == 3) {
+elseif ($designation_id == 3) {
     echo nav_link('../admin/head-of-ps-approval.php', 'HOD Approved Leaves');
     echo nav_link('../admin/reports.php', 'Reports');
+}
+elseif ($designation_id == 5) {
+    echo nav_link('../admin/head-of-auth-approval.php', 'Head Of Auth Approvals');
+    echo nav_link('../admin/head-auth-reports.php', 'Auth Reports');
 }
 // Leave Officer (designation_id = 8)
 elseif ($designation_id == 8) {

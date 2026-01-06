@@ -264,7 +264,7 @@ $remaining_sick   = $sick_balance   - $approved['Sick Leave'];
                             start_date: start,
                             end_date: end,
                             department_id: current_department_id,
-                            user_id: current_user_id // exclude yourself
+                            user_id: current_user_id 
                         },
                         success: function(data) {
                             response(data.suggestions || []);

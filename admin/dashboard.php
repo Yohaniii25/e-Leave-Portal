@@ -184,7 +184,7 @@ function createCard($title, $count, $color = 'blue', $icon = '')
             if ($designation_id == 5):
             ?>
                 <!-- FINAL APPROVAL -->
-                <a href="head-of-ps-approval.php" class="group relative overflow-hidden">
+                <a href="head-of-auth-approval.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
                         <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-orange-200 group-hover:to-red-300">
@@ -199,7 +199,7 @@ function createCard($title, $count, $color = 'blue', $icon = '')
                 </a>
 
                 <!-- REPORTS -->
-                <a href="reports.php" class="group relative overflow-hidden">
+                <a href="head-auth-reports.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-teal-500 to-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
                     <div class="relative flex flex-col items-center justify-center p-8 bg-white rounded-xl shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1">
                         <div class="w-16 h-16 bg-gradient-to-br from-teal-100 to-cyan-200 rounded-2xl flex items-center justify-center mb-4 group-hover:from-teal-200 group-hover:to-cyan-300">
@@ -300,7 +300,7 @@ function createCard($title, $count, $color = 'blue', $icon = '')
 
             <?php
 
-            elseif ($designation_id == 3 || $designation_id == 5):
+            elseif ($designation_id == 3 ):
             ?>
                 <a href="head-of-ps-approval.php" class="group relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>

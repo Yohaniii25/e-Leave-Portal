@@ -34,7 +34,7 @@ if (isset($_POST['export_csv'])) {
         FROM wp_leave_request lr     
         JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID     
         LEFT JOIN wp_departments d ON u.department_id = d.department_id     
-        WHERE lr.step_2_status = 'approved' 
+        WHERE lr.final_status = 'approved' 
           AND u.sub_office = 'Head Office'
     ";
     
@@ -94,13 +94,13 @@ if (isset($_POST['export_csv'])) {
 // Get filter date from form
 $selectedDate = $_POST['filter_date'] ?? null;
 
-// Fetch leaves approved at step 2 (for department 6 only)
+// Fetch leaves with final approved status for Head Office
 $sql = "     
     SELECT lr.*, u.first_name, u.last_name, u.email, u.sub_office, d.department_name     
     FROM wp_leave_request lr     
     JOIN wp_pradeshiya_sabha_users u ON lr.user_id = u.ID     
     LEFT JOIN wp_departments d ON u.department_id = d.department_id     
-    WHERE lr.step_2_status = 'approved' 
+    WHERE lr.final_status = 'approved' 
       AND u.sub_office = 'Head Office'
 ";
 
